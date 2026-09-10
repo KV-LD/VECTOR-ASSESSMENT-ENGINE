@@ -5,21 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VECTOR Assessment Engine</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap');
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --navy: #0B1929;
-      --blue: #1A6BAF;
-      --gold: #C9A84C;
-      --cyan: #00C8E8;
-      --white: #FFFFFF;
-      --gray: #8A9BB0;
-      --light: #E8EEF4;
+      --font-body: "Source Sans 3", system-ui, -apple-system, sans-serif;
+      --font-display: "Source Serif 4", Georgia, serif;
+      --ust-dark-teal: #006E74;
+      --ust-light-teal: #0097AC;
+      --ust-teal-deep: #004851;
+      --ust-soft-black: #231F20;
+      --ust-white: #FFFFFF;
+      --ust-off: #EEF6F7;
+      --ust-green: #0a9b72;
+      --ust-coral: #e0604a;
+      --ust-muted: rgba(35, 31, 32, 0.72);
+      --ust-muted2: rgba(35, 31, 32, 0.55);
+      --ust-border: rgba(0, 110, 116, 0.18);
+      color-scheme: light;
     }
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--navy);
-      color: var(--white);
+      font-family: var(--font-body);
+      background: var(--ust-off);
+      color: var(--ust-soft-black);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
     .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
     .screen { display: none; }
@@ -27,36 +37,38 @@
 
     /* Login Screen */
     .login-form {
-      background: rgba(255,255,255,0.05);
+      background: var(--ust-white);
       padding: 40px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--ust-border);
+      box-shadow: 0 2px 12px rgba(0, 110, 116, 0.08);
     }
-    h1 { font-size: 32px; margin-bottom: 30px; text-align: center; }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
+    h1 { font-size: 32px; margin-bottom: 30px; text-align: center; font-family: var(--font-display); color: var(--ust-dark-teal); }
+    h2 { font-family: var(--font-display); color: var(--ust-soft-black); }
+    h3 { font-family: var(--font-display); color: var(--ust-soft-black); }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--ust-muted2); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; }
     input, select {
       width: 100%;
       padding: 12px 16px;
-      border: 1.5px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      color: var(--white);
+      border: 1.5px solid var(--ust-border);
+      background: var(--ust-white);
+      color: var(--ust-soft-black);
       border-radius: 8px;
       font-size: 14px;
       outline: none;
       transition: border 0.2s;
+      font-family: var(--font-body);
     }
-    input:focus, select:focus { border-color: var(--gold); }
-    input::placeholder { color: rgba(255,255,255,0.3); }
-    select option { background: var(--navy); color: var(--white); }
+    input:focus, select:focus { border-color: var(--ust-dark-teal); box-shadow: 0 0 0 3px rgba(0, 110, 116, 0.1); }
+    input::placeholder { color: var(--ust-muted2); }
+    select option { background: var(--ust-white); color: var(--ust-soft-black); }
 
     .btn {
       width: 100%;
       padding: 15px;
-      background: var(--gold);
-      color: var(--navy);
+      background: var(--ust-dark-teal);
+      color: var(--ust-white);
       border: none;
       border-radius: 8px;
       font-size: 14px;
@@ -64,58 +76,62 @@
       cursor: pointer;
       transition: all 0.2s;
       margin-top: 20px;
+      font-family: var(--font-body);
     }
-    .btn:hover { background: #E8C46A; transform: translateY(-2px); }
+    .btn:hover { background: var(--ust-light-teal); transform: translateY(-2px); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Assessment Screen */
     .assess-header {
-      background: rgba(255,255,255,0.05);
+      background: var(--ust-white);
       padding: 20px;
       border-radius: 12px;
       margin-bottom: 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border: 1px solid var(--ust-border);
+      color: var(--ust-soft-black);
     }
     .progress-bar {
       flex: 1;
       height: 4px;
-      background: rgba(255,255,255,0.1);
+      background: var(--ust-border);
       border-radius: 2px;
       margin: 0 20px;
       overflow: hidden;
     }
     .progress-fill {
       height: 100%;
-      background: var(--gold);
+      background: var(--ust-dark-teal);
       width: 0%;
       transition: width 0.3s;
     }
 
     .question-card {
-      background: rgba(255,255,255,0.05);
+      background: var(--ust-white);
       padding: 40px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--ust-border);
+      box-shadow: 0 2px 12px rgba(0, 110, 116, 0.08);
     }
-    .question-card h2 { font-size: 20px; margin-bottom: 30px; line-height: 1.5; }
+    .question-card h2 { font-size: 20px; margin-bottom: 30px; line-height: 1.5; color: var(--ust-soft-black); }
     .options { margin: 30px 0; }
     .option {
       padding: 15px 20px;
       margin-bottom: 12px;
-      background: rgba(255,255,255,0.05);
-      border: 2px solid rgba(255,255,255,0.1);
+      background: var(--ust-off);
+      border: 2px solid var(--ust-border);
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
       display: flex;
       gap: 15px;
     }
-    .option:hover { border-color: var(--cyan); }
-    .option.selected { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+    .option:hover { border-color: var(--ust-light-teal); background: rgba(0, 151, 172, 0.05); }
+    .option.selected { border-color: var(--ust-dark-teal); background: rgba(0, 110, 116, 0.08); }
     .option input { display: none; }
-    .option label { margin: 0; flex: 1; cursor: pointer; font-size: 14px; color: var(--white); }
+    .option label { margin: 0; flex: 1; cursor: pointer; font-size: 14px; color: var(--ust-soft-black); }
 
     .nav-buttons {
       display: flex;
@@ -125,34 +141,36 @@
     .btn-back, .btn-next {
       flex: 1;
       padding: 12px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: transparent;
-      color: var(--white);
+      border: 1px solid var(--ust-border);
+      background: var(--ust-white);
+      color: var(--ust-soft-black);
       border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
       transition: all 0.2s;
+      font-family: var(--font-body);
     }
-    .btn-back:hover { border-color: var(--cyan); }
-    .btn-next { background: var(--gold); color: var(--navy); font-weight: 600; opacity: 0.3; pointer-events: none; }
+    .btn-back:hover { border-color: var(--ust-dark-teal); color: var(--ust-dark-teal); }
+    .btn-next { background: var(--ust-dark-teal); color: var(--ust-white); font-weight: 600; opacity: 0.3; pointer-events: none; }
     .btn-next.ready { opacity: 1; pointer-events: all; }
 
     /* Report Screen */
     .report {
-      background: rgba(255,255,255,0.05);
+      background: var(--ust-white);
       padding: 40px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--ust-border);
+      box-shadow: 0 2px 12px rgba(0, 110, 116, 0.08);
     }
     .report-header {
       text-align: center;
       margin-bottom: 40px;
       padding-bottom: 30px;
-      border-bottom: 2px solid var(--gold);
+      border-bottom: 2px solid var(--ust-dark-teal);
     }
-    .vector-sign { font-size: 48px; font-weight: 700; color: var(--gold); margin: 20px 0; font-family: monospace; letter-spacing: 3px; }
-    .vector-class { font-size: 28px; margin-bottom: 10px; }
-    .class-desc { font-size: 14px; color: var(--gray); font-style: italic; }
+    .vector-sign { font-size: 48px; font-weight: 700; color: var(--ust-dark-teal); margin: 20px 0; font-family: monospace; letter-spacing: 3px; }
+    .vector-class { font-size: 28px; margin-bottom: 10px; color: var(--ust-soft-black); }
+    .class-desc { font-size: 14px; color: var(--ust-muted); font-style: italic; }
 
     .dimensions {
       display: grid;
@@ -161,25 +179,26 @@
       margin: 30px 0;
     }
     .dim-card {
-      background: rgba(255,255,255,0.05);
+      background: var(--ust-off);
       padding: 20px;
       border-radius: 8px;
-      border-left: 4px solid var(--cyan);
+      border-left: 4px solid var(--ust-dark-teal);
     }
-    .dim-label { font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
-    .dim-score { font-size: 24px; font-weight: 700; color: var(--gold); margin: 10px 0; }
+    .dim-label { font-size: 12px; color: var(--ust-muted2); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; }
+    .dim-score { font-size: 24px; font-weight: 700; color: var(--ust-dark-teal); margin: 10px 0; }
 
     .btn-download {
       width: 100%;
       padding: 15px;
-      background: var(--cyan);
-      color: var(--navy);
+      background: var(--ust-light-teal);
+      color: var(--ust-white);
       border: none;
       border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       margin-top: 30px;
+      font-family: var(--font-body);
     }
     .btn-download:hover { opacity: 0.9; }
   </style>
@@ -230,8 +249,8 @@
 <!-- Assessment Screen -->
 <div id="assess-screen" class="screen">
   <div class="container">
-    <div class="assess-header">
-      <span id="progress-text">1 / 30</span>
+    <div class="assess-header" style="color: var(--ust-soft-black);">
+      <span id="progress-text" style="font-size: 12px; color: var(--ust-muted2);">1 / 30</span>
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
@@ -253,7 +272,7 @@
     <div class="report">
       <div class="report-header">
         <h1>VECTOR Assessment Report</h1>
-        <div id="user-info" style="margin: 20px 0; color: var(--gray);"></div>
+        <div id="user-info" style="margin: 20px 0; color: var(--ust-muted); font-size: 14px;"></div>
         <div class="vector-class" id="class-name"></div>
         <div class="vector-sign" id="vector-sign"></div>
         <div class="class-desc" id="class-desc"></div>

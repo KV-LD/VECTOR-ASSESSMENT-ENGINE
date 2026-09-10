@@ -3,12 +3,16 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const ExcelJS = require('exceljs');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 const { calculateScores, calculateVectorSign, assignVectorClass, generateReport, CLASSES } = require('./scoring');
 
 const app = express();
 const PORT = 3000;
 const SECRET = 'vector-secret-key-change-in-production';
+const ADMIN_SECRET = 'admin-secret-key-change-in-production';
 const DATA_FILE = path.join(__dirname, '../data/assessments.xlsx');
+const ADMIN_USER = 'admin@ust.com';
+const ADMIN_PASS = bcrypt.hashSync('admin123', 10); // Change in production
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -136,12 +140,131 @@ app.post('/api/save-assessment', async (req, res) => {
   }
 });
 
+// Admin login
+app.post('/api/admin-login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (email !== ADMIN_USER || !bcrypt.compareSync(password, ADMIN_PASS)) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  const token = jwt.sign({ role: 'admin', email }, ADMIN_SECRET);
+  res.json({ token, message: 'Admin login successful' });
+});
+
+// Get all assessments (admin only)
+app.get('/api/admin/results', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    jwt.verify(token, ADMIN_SECRET);
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(DATA_FILE);
+    const resultsSheet = workbook.getWorksheet('Results');
+
+    const results = [];
+    resultsSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header
+      results.push({
+        email: row.getCell('A').value,
+        emp_id: row.getCell('B').value,
+        name: row.getCell('C').value,
+        role: row.getCell('D').value,
+        attempt_type: row.getCell('E').value,
+        v_score: row.getCell('F').value,
+        e_score: row.getCell('G').value,
+        c_score: row.getCell('H').value,
+        t_score: row.getCell('I').value,
+        o_score: row.getCell('J').value,
+        r_score: row.getCell('K').value,
+        vector_sign: row.getCell('L').value,
+        vector_class: row.getCell('M').value,
+        timestamp: row.getCell('N').value
+      });
+    });
+
+    res.json({ results, total: results.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user attempts (admin only)
+app.get('/api/admin/user/:email', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    jwt.verify(token, ADMIN_SECRET);
+
+    const { email } = req.params;
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(DATA_FILE);
+    const resultsSheet = workbook.getWorksheet('Results');
+
+    const userAttempts = [];
+    resultsSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (row.getCell('A').value === email) {
+        userAttempts.push({
+          attempt_type: row.getCell('E').value,
+          vector_sign: row.getCell('L').value,
+          vector_class: row.getCell('M').value,
+          timestamp: row.getCell('N').value,
+          scores: {
+            V: row.getCell('F').value,
+            E: row.getCell('G').value,
+            C: row.getCell('H').value,
+            T: row.getCell('I').value,
+            O: row.getCell('J').value,
+            R: row.getCell('K').value
+          }
+        });
+      }
+    });
+
+    res.json({ email, attempts: userAttempts, count: userAttempts.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Export results as Excel (admin only)
+app.get('/api/admin/export', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    jwt.verify(token, ADMIN_SECRET);
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(DATA_FILE);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=VECTOR-Assessment-Results.xlsx');
+
+    await workbook.xlsx.write(res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve frontend
 app.get('/VECTORASSESSMENTENGINE', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/admin.html'));
+});
+
 app.listen(PORT, () => {
   initializeExcel();
   console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
+  console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
 });

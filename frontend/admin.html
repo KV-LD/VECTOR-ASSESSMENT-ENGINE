@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VECTOR Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --font-body: "Source Sans 3", system-ui, -apple-system, sans-serif;
+      --font-display: "Source Serif 4", Georgia, serif;
+      --ust-dark-teal: #006E74;
+      --ust-light-teal: #0097AC;
+      --ust-soft-black: #231F20;
+      --ust-white: #FFFFFF;
+      --ust-off: #EEF6F7;
+      --ust-green: #0a9b72;
+      --ust-coral: #e0604a;
+      --ust-muted: rgba(35, 31, 32, 0.72);
+      --ust-muted2: rgba(35, 31, 32, 0.55);
+      --ust-border: rgba(0, 110, 116, 0.18);
+      color-scheme: light;
+    }
+    body {
+      font-family: var(--font-body);
+      background: var(--ust-off);
+      color: var(--ust-soft-black);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* Login */
+    .login-form {
+      max-width: 400px;
+      margin: 100px auto;
+      background: var(--ust-white);
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--ust-border);
+      box-shadow: 0 2px 12px rgba(0, 110, 116, 0.08);
+    }
+    h1 { font-family: var(--font-display); color: var(--ust-dark-teal); margin-bottom: 30px; text-align: center; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--ust-muted2); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--ust-border);
+      background: var(--ust-white);
+      color: var(--ust-soft-black);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+      font-family: var(--font-body);
+    }
+    input:focus { border-color: var(--ust-dark-teal); box-shadow: 0 0 0 3px rgba(0, 110, 116, 0.1); }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--ust-dark-teal);
+      color: var(--ust-white);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-body);
+      margin-top: 20px;
+    }
+    .btn:hover { background: var(--ust-light-teal); }
+    .error { color: var(--ust-coral); font-size: 12px; margin-top: 10px; }
+
+    /* Dashboard */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--ust-dark-teal);
+    }
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .filter-group label { font-size: 12px; font-weight: 600; }
+    .filter-group select, .filter-group input {
+      padding: 8px 12px;
+      border: 1px solid var(--ust-border);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: var(--ust-white);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid var(--ust-border);
+    }
+    .stat-label { font-size: 12px; color: var(--ust-muted2); text-transform: uppercase; }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--ust-dark-teal); margin-top: 10px; }
+
+    .results-table {
+      background: var(--ust-white);
+      border-radius: 10px;
+      border: 1px solid var(--ust-border);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      background: var(--ust-off);
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--ust-soft-black);
+      border-bottom: 2px solid var(--ust-border);
+    }
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--ust-border);
+    }
+    tr:hover { background: var(--ust-off); }
+    .vector-sign { font-family: monospace; font-weight: 600; color: var(--ust-dark-teal); }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-pre { background: rgba(0, 151, 172, 0.15); color: var(--ust-light-teal); }
+    .badge-post { background: rgba(10, 155, 114, 0.15); color: var(--ust-green); }
+    .btn-small {
+      padding: 6px 12px;
+      background: var(--ust-dark-teal);
+      color: var(--ust-white);
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-small:hover { background: var(--ust-light-teal); }
+    .btn-export {
+      background: var(--ust-green);
+      padding: 10px 20px;
+      margin-bottom: 20px;
+    }
+    .btn-export:hover { background: #088a63; }
+    .btn-logout {
+      background: var(--ust-coral);
+      padding: 8px 16px;
+    }
+    .btn-logout:hover { background: #d95440; }
+  </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen" class="screen active">
+  <div class="login-form">
+    <h1>🔐 Admin Login</h1>
+    <form onsubmit="handleAdminLogin(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="admin-email" placeholder="admin@ust.com" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="admin-password" placeholder="password" required>
+      </div>
+      <button type="submit" class="btn">Login</button>
+      <div class="error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard Screen -->
+<div id="dashboard-screen" class="screen">
+  <div class="container">
+    <div class="header">
+      <h1>📊 VECTOR Assessment Dashboard</h1>
+      <button class="btn btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <button class="btn btn-export" onclick="downloadExcel()">⬇️ Download All Results (Excel)</button>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label>Role</label>
+        <select id="filter-role" onchange="filterResults()">
+          <option value="">All Roles</option>
+          <option value="eng">Software Engineer</option>
+          <option value="con">Consultant</option>
+          <option value="fin">Finance</option>
+          <option value="hr">HR/L&D</option>
+          <option value="del">Delivery/PM</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Attempt Type</label>
+        <select id="filter-attempt" onchange="filterResults()">
+          <option value="">All Attempts</option>
+          <option value="Pre-Program">Pre-Program</option>
+          <option value="Post-Program">Post-Program</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Search Email</label>
+        <input type="email" id="search-email" placeholder="Search..." onkeyup="filterResults()">
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Attempts</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Unique Users</div>
+        <div class="stat-value" id="stat-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pre-Program</div>
+        <div class="stat-value" id="stat-pre">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Post-Program</div>
+        <div class="stat-value" id="stat-post">0</div>
+      </div>
+    </div>
+
+    <div class="results-table">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Attempt</th>
+            <th>Vector Sign</th>
+            <th>Class</th>
+            <th>Timestamp</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--ust-muted);">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+let allResults = [];
+let adminToken = '';
+
+async function handleAdminLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('admin-email').value;
+  const password = document.getElementById('admin-password').value;
+
+  try {
+    const res = await fetch(`${API}/api/admin-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!res.ok) {
+      document.getElementById('login-error').textContent = 'Invalid credentials';
+      return;
+    }
+
+    const data = await res.json();
+    adminToken = data.token;
+    localStorage.setItem('admin-token', adminToken);
+
+    showScreen('dashboard-screen');
+    loadResults();
+  } catch (err) {
+    document.getElementById('login-error').textContent = 'Error: ' + err.message;
+  }
+}
+
+async function loadResults() {
+  try {
+    const res = await fetch(`${API}/api/admin/results`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+
+    if (!res.ok) {
+      logout();
+      return;
+    }
+
+    const data = await res.json();
+    allResults = data.results || [];
+    updateStats();
+    displayResults(allResults);
+  } catch (err) {
+    alert('Error loading results: ' + err.message);
+  }
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = allResults.length;
+
+  const uniqueUsers = new Set(allResults.map(r => r.email)).size;
+  document.getElementById('stat-users').textContent = uniqueUsers;
+
+  const preCount = allResults.filter(r => r.attempt_type === 'Pre-Program').length;
+  const postCount = allResults.filter(r => r.attempt_type === 'Post-Program').length;
+  document.getElementById('stat-pre').textContent = preCount;
+  document.getElementById('stat-post').textContent = postCount;
+}
+
+function displayResults(results) {
+  const tbody = document.getElementById('table-body');
+
+  if (results.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--ust-muted);">No results found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = results.map(r => `
+    <tr>
+      <td>${r.email}</td>
+      <td>${r.name}</td>
+      <td>${r.role}</td>
+      <td><span class="badge ${r.attempt_type === 'Pre-Program' ? 'badge-pre' : 'badge-post'}">${r.attempt_type}</span></td>
+      <td><span class="vector-sign">${r.vector_sign}</span></td>
+      <td>${r.vector_class}</td>
+      <td>${new Date(r.timestamp).toLocaleString()}</td>
+      <td><button class="btn-small" onclick="viewUserAttempts('${r.email}')">View</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterResults() {
+  const role = document.getElementById('filter-role').value;
+  const attempt = document.getElementById('filter-attempt').value;
+  const email = document.getElementById('search-email').value.toLowerCase();
+
+  let filtered = allResults.filter(r => {
+    const matchRole = !role || r.role === role;
+    const matchAttempt = !attempt || r.attempt_type === attempt;
+    const matchEmail = !email || r.email.toLowerCase().includes(email);
+    return matchRole && matchAttempt && matchEmail;
+  });
+
+  displayResults(filtered);
+}
+
+async function viewUserAttempts(email) {
+  try {
+    const res = await fetch(`${API}/api/admin/user/${email}`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+
+    const data = await res.json();
+    let html = `<h3>${email} - ${data.count} Attempt(s)</h3><hr>`;
+
+    data.attempts.forEach((att, idx) => {
+      html += `
+        <div style="margin: 20px 0; padding: 15px; background: var(--ust-off); border-radius: 8px;">
+          <strong>Attempt ${idx + 1}</strong> (${att.attempt_type})<br>
+          <strong>Vector Sign:</strong> ${att.vector_sign}<br>
+          <strong>Class:</strong> ${att.vector_class}<br>
+          <strong>Scores:</strong> V:${att.scores.V} E:${att.scores.E} C:${att.scores.C} T:${att.scores.T} O:${att.scores.O} R:${att.scores.R}<br>
+          <strong>Date:</strong> ${new Date(att.timestamp).toLocaleString()}
+        </div>
+      `;
+    });
+
+    alert(html);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function downloadExcel() {
+  try {
+    const res = await fetch(`${API}/api/admin/export`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+
+    if (!res.ok) {
+      alert('Error downloading file');
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'VECTOR-Assessment-Results.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('admin-token');
+  adminToken = '';
+  showScreen('login-screen');
+  document.getElementById('admin-email').value = '';
+  document.getElementById('admin-password').value = '';
+}
+
+function showScreen(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screen).classList.add('active');
+}
+
+// Auto-restore login
+window.addEventListener('load', () => {
+  const savedToken = localStorage.getItem('admin-token');
+  if (savedToken) {
+    adminToken = savedToken;
+    showScreen('dashboard-screen');
+    loadResults();
+  }
+});
+</script>
+
+</body>
+</html>

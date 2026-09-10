@@ -25,6 +25,10 @@ app.use((req, res, next) => {
 
 // Initialize Excel file if not exists
 async function initializeExcel() {
+  const dataDir = path.dirname(DATA_FILE);
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
   if (!fs.existsSync(DATA_FILE)) {
     const workbook = new ExcelJS.Workbook();
 
@@ -263,8 +267,13 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/admin.html'));
 });
 
-app.listen(PORT, () => {
-  initializeExcel();
+app.listen(PORT, async () => {
+  try {
+    await initializeExcel();
+  } catch (error) {
+    console.error('Failed to initialize Excel storage:', error);
+    process.exit(1);
+  }
   console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
   console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
 });

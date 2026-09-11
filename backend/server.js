@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken');
 const ExcelJS = require('exceljs');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
-const { calculateScores, calculateVectorSign, assignVectorClass, generateReport, CLASSES } = require('./scoring');
+const questionsByRole = require('./questions');
+const { calculateScores, generateReport } = require('./scoring');
 
 const app = express();
 const PORT = 3000;
@@ -64,7 +65,7 @@ async function initializeExcel() {
     ];
 
     await workbook.xlsx.writeFile(DATA_FILE);
-    console.log('✅ Excel file initialized');
+    console.log(`✅ Excel file initialized at ${DATA_FILE}`);
   }
 }
 
@@ -83,10 +84,10 @@ app.post('/api/login', (req, res) => {
 // Get questions by role
 app.get('/api/questions/:role', (req, res) => {
   const { role } = req.params;
-  const questions = require('./questions.js');
+  const questions = questionsByRole[role];
 
-  if (questions[role]) {
-    res.json(questions[role]);
+  if (questions) {
+    res.json(questions);
   } else {
     res.status(404).json({ error: 'Role not found' });
   }
@@ -100,16 +101,30 @@ app.post('/api/save-assessment', async (req, res) => {
 
     const user = jwt.verify(token, SECRET);
     const { responses } = req.body;
+    const questions = questionsByRole[user.role];
+    if (!questions) {
+      return res.status(400).json({ error: 'Unknown role' });
+    }
 
-    // Calculate scores
-    const dimScores = calculateScores(responses);
-    const vectorSign = calculateVectorSign(dimScores);
-    const vectorClass = assignVectorClass(dimScores);
-    const report = generateReport(dimScores, responses);
+    const dimScores = calculateScores(responses, questions);
+    const report = generateReport(dimScores, responses, { role: user.role, name: user.name });
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(DATA_FILE);
+    const usersSheet = workbook.getWorksheet('Users');
     const resultsSheet = workbook.getWorksheet('Results');
+
+    if (usersSheet) {
+      usersSheet.addRow({
+        id: usersSheet.rowCount,
+        email: user.email,
+        emp_id: user.emp_id,
+        name: user.name,
+        role: user.role,
+        timestamp: report.timestamp,
+        attempt_type: user.attempt_type
+      });
+    }
 
     resultsSheet.addRow({
       email: user.email,
@@ -117,27 +132,20 @@ app.post('/api/save-assessment', async (req, res) => {
       name: user.name,
       role: user.role,
       attempt_type: user.attempt_type,
-      v_score: dimScores.V,
-      e_score: dimScores.E,
-      c_score: dimScores.C,
-      t_score: dimScores.T,
-      o_score: dimScores.O,
-      r_score: dimScores.R,
-      vector_sign: vectorSign,
-      vector_class: vectorClass,
-      timestamp: new Date().toISOString()
+      v_score: dimScores.V.level,
+      e_score: dimScores.E.level,
+      c_score: dimScores.C.level,
+      t_score: dimScores.T.level,
+      o_score: dimScores.O.level,
+      r_score: dimScores.R.level,
+      vector_sign: report.vector_sign,
+      vector_class: report.vector_class,
+      timestamp: report.timestamp
     });
 
     await workbook.xlsx.writeFile(DATA_FILE);
 
-    res.json({
-      success: true,
-      report: {
-        ...report,
-        class_name: CLASSES[vectorClass].name,
-        class_desc: CLASSES[vectorClass].desc
-      }
-    });
+    res.json({ success: true, report });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -276,4 +284,5 @@ app.listen(PORT, async () => {
   }
   console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
   console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
+  console.log(`📁 Score data Excel: ${DATA_FILE}`);
 });

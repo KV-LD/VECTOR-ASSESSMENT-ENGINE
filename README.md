@@ -20,8 +20,11 @@ Server runs on: `http://localhost:3000/VECTORASSESSMENTENGINE`
 - Users go to the static link
 - Login with: Email, Employee ID, Name, Role, Attempt Type
 - Answer 30 role-specific questions
-- Get VECTOR sign + class report
-- Data auto-saves to `data/assessments.xlsx`
+- Get VECTOR class (V1–V5) and Vector signature (for example `V3 - V`)
+- Data auto-saves to **`data/assessments.xlsx`** on the machine running the server (created automatically; this folder is gitignored)
+- On the report screen, use **Save as PDF** (browser print dialog)
+
+Admin Excel export: `http://localhost:3000/admin` → Download All Results (Excel), which is the same file.
 
 ## Project Structure
 

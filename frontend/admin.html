@@ -209,6 +209,7 @@
     </div>
 
     <button class="btn btn-export" onclick="downloadExcel()">⬇️ Download All Results (Excel)</button>
+    <p style="font-size:13px;color:var(--ust-muted);margin:8px 0 20px;">Score data is stored on the server in <code>data/assessments.xlsx</code>. This download is that workbook.</p>
 
     <div class="filters">
       <div class="filter-group">
@@ -278,7 +279,7 @@
 </div>
 
 <script>
-const API = 'http://localhost:3000';
+const API = '';
 let allResults = [];
 let adminToken = '';
 

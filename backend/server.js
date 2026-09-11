@@ -294,7 +294,7 @@ app.get('/api/admin/export', async (req, res) => {
 });
 
 // Serve frontend
-app.get('/VECTORASSESSMENTENGINE', (req, res) => {
+app.get(['/', '/VECTORASSESSMENTENGINE', '/VECTOR.html'], (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, '../frontend/index.html'));

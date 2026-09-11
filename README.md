@@ -1,5 +1,21 @@
 # VECTOR Assessment Engine
 
+The working UI is on branch `cursor/fix-npm-install-jsonwebtoken-03fa`. If you run `main`, you will still see `#` in answers, a concatenated Vector string, and a broken download.
+
+```bash
+git fetch origin
+git checkout cursor/fix-npm-install-jsonwebtoken-03fa
+git pull origin cursor/fix-npm-install-jsonwebtoken-03fa
+npm install
+npm start
+```
+
+Then open `http://localhost:3000/VECTORASSESSMENTENGINE` and hard-refresh (Ctrl+Shift+R). The welcome page must show a gold bar: **BUILD FIX-2**. If that bar is missing, the browser is still loading old files.
+
+You can also open `VECTOR.html` from this folder in a browser (no server needed for the assessment and HTML download).
+
+## Quick Start (Prototype)
+
 A Node.js web application for conducting VECTOR capability assessments with role-based questions, real-time scoring, and Excel data storage.
 
 ## Quick Start (Prototype)

@@ -15,14 +15,25 @@ const DATA_FILE = path.join(__dirname, '../data/assessments.xlsx');
 const ADMIN_USER = 'admin@ust.com';
 const ADMIN_PASS = bcrypt.hashSync('admin123', 10); // Change in production
 
+app.disable('etag');
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
 app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  etag: false,
+  lastModified: false,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+    res.setHeader('Cache-Control', 'no-store');
+  }
+}));
 
 // Initialize Excel file if not exists
 async function initializeExcel() {
@@ -81,13 +92,29 @@ app.post('/api/login', (req, res) => {
   res.json({ token, message: 'Login successful' });
 });
 
+function cleanText(value) {
+  return String(value)
+    .replace(/â€”|â€“|â€œ|â€\u009d/g, ' - ')
+    .replace(/[\u2014\u2013\u2015]/g, ' - ')
+    .replace(/\u00a0/g, ' ');
+}
+
+function cleanQuestions(questions) {
+  return questions.map((q) => ({
+    ...q,
+    text: cleanText(q.text),
+    opts: (q.opts || []).map((o) => ({ ...o, t: cleanText(o.t) }))
+  }));
+}
+
 // Get questions by role
 app.get('/api/questions/:role', (req, res) => {
   const { role } = req.params;
   const questions = questionsByRole[role];
 
   if (questions) {
-    res.json(questions);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.json(cleanQuestions(questions));
   } else {
     res.status(404).json({ error: 'Role not found' });
   }
@@ -268,6 +295,8 @@ app.get('/api/admin/export', async (req, res) => {
 
 // Serve frontend
 app.get('/VECTORASSESSMENTENGINE', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 

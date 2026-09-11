@@ -1,4 +1,4 @@
-// VECTOR scoring — matches VECTOR_PRD and the interactive assessment prototype.
+// VECTOR scoring - matches VECTOR_PRD and the interactive assessment prototype.
 // Situational items (V, E, C) use scores 1/2/4; behavioural items (O, T, R) use 1–5.
 
 const DIM_ORDER = ['V', 'E', 'C', 'O', 'T', 'R'];
@@ -21,7 +21,7 @@ const DIM_COLORS = {
 };
 const CLASSES = {
   V1: { name: 'Executor', desc: 'You use AI. AI does not yet fully use you.' },
-  V2: { name: 'Director', desc: 'You tell AI what to do — and know when it is wrong.' },
+  V2: { name: 'Director', desc: 'You tell AI what to do - and know when it is wrong.' },
   V3: { name: 'Integrator', desc: 'You and AI together outperform either separately.' },
   V4: { name: 'Architect', desc: 'You design the system others perform in.' },
   V5: { name: 'Multiplier', desc: "Your Vector raises everyone else's." }
@@ -95,7 +95,11 @@ function deriveClass(scores) {
 }
 
 function calculateVectorSign(scores) {
-  const { cls, dom } = typeof scores.cls === 'string' ? scores : deriveClass(scores);
+  const derived = scores && scores.cls && scores.dom
+    ? scores
+    : deriveClass(scores);
+  const cls = String(derived.cls || '').match(/^V[1-5]$/) ? derived.cls : 'V1';
+  const dom = 'VECTOR'.includes(derived.dom) ? derived.dom : 'V';
   return `${cls} - ${dom}`;
 }
 
@@ -106,42 +110,42 @@ function assignVectorClass(scores) {
 function getDimInterp(dim, level) {
   const d = {
     V: {
-      1: 'You tend to engage AI with the problem as stated, without first reframing the underlying question. The quality of AI output you produce is bounded by the quality of the brief you receive — significant value is being left on the table.',
+      1: 'You tend to engage AI with the problem as stated, without first reframing the underlying question. The quality of AI output you produce is bounded by the quality of the brief you receive - significant value is being left on the table.',
       2: 'You occasionally question whether the right problem has been framed before engaging AI. This instinct is present and valuable. The development priority is making it systematic rather than occasional.',
       3: 'You consistently reframe problems before AI engagement, and this reframing meaningfully changes what AI produces. Your Vision Clarity is a reliable professional asset.',
       4: 'Your ability to define the right problem before AI engages is a differentiating capability. You see past the stated brief to the underlying question, and AI output produced under your direction is notably more targeted and useful as a result.',
       5: 'Vision Clarity at the Defining level means you set the standard for how problems are framed in your organization. Others adopt your framing instinct because it consistently produces better outcomes.'
     },
     E: {
-      1: 'In ambiguous or high-pressure situations you tend to defer — either accepting AI output without systematic evaluation or escalating judgment calls to others. Edge Judgment develops through deliberate practice at the boundary of your confidence.',
+      1: 'In ambiguous or high-pressure situations you tend to defer - either accepting AI output without systematic evaluation or escalating judgment calls to others. Edge Judgment develops through deliberate practice at the boundary of your confidence.',
       2: 'You are developing the awareness to recognize when situations require your judgment rather than AI confidence. The gap between awareness and action is your primary development target.',
       3: 'Your Edge Judgment is a genuine organizational asset. You make calls in ambiguous situations, own the consequence, and your peers recognize that you can be trusted to act at the point where AI reaches its limit.',
-      4: 'Edge Judgment at the Advanced level means you operate reliably in the territory most challenging for AI — high stakes, incomplete information, time pressure. Your decisions in these moments are sought out by others.',
+      4: 'Edge Judgment at the Advanced level means you operate reliably in the territory most challenging for AI - high stakes, incomplete information, time pressure. Your decisions in these moments are sought out by others.',
       5: 'Your Edge Judgment is field-defining. You have developed the capacity to decide with precision where others hesitate, and your pattern recognition in ambiguous situations is demonstrably superior to both AI models and less experienced colleagues.'
     },
     C: {
       1: 'Your attention in professional interactions tends toward content and outcome rather than relational dynamics and contextual signals. Context Fluency at this level means important signals are present and available but not yet being systematically read.',
-      2: 'You notice some of the signals beneath the surface of professional interactions — the emotional temperature, the power dynamics, the unsaid. Building a structured reflection habit will accelerate development significantly.',
+      2: 'You notice some of the signals beneath the surface of professional interactions - the emotional temperature, the power dynamics, the unsaid. Building a structured reflection habit will accelerate development significantly.',
       3: 'You read organizational and interpersonal contexts reliably. What you notice regularly informs how you act, and the people around you benefit from your contextual intelligence even when it is not explicitly named.',
       4: 'Context Fluency at the Advanced level means you see what others miss and act on it in ways that shape outcomes. Your ability to read rooms, relationships, and organizational dynamics is a recognized capability.',
-      5: 'Your Context Fluency is exceptional. You perceive the signals that determine whether a project, relationship, or organizational initiative succeeds or fails — and your interventions based on that perception are consistently consequential.'
+      5: 'Your Context Fluency is exceptional. You perceive the signals that determine whether a project, relationship, or organizational initiative succeeds or fails - and your interventions based on that perception are consistently consequential.'
     },
     T: {
       1: 'Trust in your key relationships tends to develop reactively rather than by design. Trust Architecture at this level means you respond to trust as it emerges rather than actively creating the conditions for it to grow.',
       2: 'You are developing awareness of trust dynamics in your relationships and beginning to respond to shifts as you notice them. The transition from reactive to proactive trust management is the key next step.',
-      3: 'You actively manage trust in your key relationships — monitoring its trajectory, investing in it deliberately, and adjusting your behavior in response to what you observe. This is a genuine professional asset in AI-augmented delivery contexts.',
+      3: 'You actively manage trust in your key relationships - monitoring its trajectory, investing in it deliberately, and adjusting your behavior in response to what you observe. This is a genuine professional asset in AI-augmented delivery contexts.',
       4: 'Trust Architecture at the Advanced level means clients and colleagues extend greater autonomy to you over time because your reliability and integrity are demonstrably consistent. You make AI-augmented delivery feel safe.',
       5: 'Your Trust Architecture capability is exceptional. The relationships you build and maintain are characterized by a quality of trust that enables work others cannot access.'
     },
     O: {
-      1: 'Your current relationship with AI is primarily transactional — you prompt and use output without systematic direction or evaluation. Orchestration Intelligence at this level is the starting point for deliberate development.',
-      2: 'You are developing a directional relationship with AI — framing before prompting, iterating when output falls short. This is a meaningful transition from transactional to intentional.',
+      1: 'Your current relationship with AI is primarily transactional - you prompt and use output without systematic direction or evaluation. Orchestration Intelligence at this level is the starting point for deliberate development.',
+      2: 'You are developing a directional relationship with AI - framing before prompting, iterating when output falls short. This is a meaningful transition from transactional to intentional.',
       3: 'Your Orchestration Intelligence is established. You direct AI with purpose, evaluate output critically, and consistently produce better outcomes through human-AI collaboration than either you or AI could produce independently.',
       4: 'Orchestration Intelligence at the Advanced level means the human-AI units you operate within perform at a ceiling that others cannot reach. Your direction of AI is recognizably more sophisticated, targeted, and consequential.',
       5: 'Your Orchestration Intelligence is field-defining. You architect human-AI collaboration at the organizational level. The standards you set become the standards others aspire to.'
     },
     R: {
-      1: 'Your work currently operates primarily within your primary domain of expertise. Range at this level reflects focused depth — valuable in its own right, but increasingly insufficient as AI makes deep single-domain expertise more abundant.',
+      1: 'Your work currently operates primarily within your primary domain of expertise. Range at this level reflects focused depth - valuable in its own right, but increasingly insufficient as AI makes deep single-domain expertise more abundant.',
       2: 'You engage with adjacent domains when required and make occasional contributions outside your primary expertise. Building deliberate cross-domain practice will accelerate Range development significantly.',
       3: 'Your Range is established. You operate credibly and contribute genuinely across multiple domains, and the distance between domains is a source of insight rather than hesitation.',
       4: 'Range at the Advanced level means you are sought out for perspectives outside your primary domain because your cross-domain contribution is recognized as genuinely valuable.',
@@ -155,11 +159,11 @@ function getProfileNarrative(scores, cls) {
   const dom = Object.entries(scores).reduce((a, b) => (b[1].level > a[1].level ? b : a))[0];
   const weak = Object.entries(scores).reduce((a, b) => (b[1].level < a[1].level ? b : a))[0];
   const n = {
-    V1: `This profile reflects a practitioner at the beginning of their Human-AI collaboration journey. The dimensions that determine your Vector are all actively developing — and all are developable through deliberate practice. <strong>Orchestration Intelligence is your highest-leverage starting point</strong>: the practitioner who learns to direct AI with intent, rather than use it as a sophisticated search engine, activates all other VECTOR dimensions more rapidly. The transition from V1 to V2 is achievable within weeks for someone who practices deliberately.`,
-    V2: `This profile reflects a practitioner who has moved beyond transactional AI use and is developing genuine directional capability. You know when AI is wrong more often than you accept output without question, and you have begun developing the framing and evaluation habits that characterize high-Vector work. <strong>The gap between V2 and V3 is the most consequential in the VECTOR scale</strong> — it is where AI use becomes AI collaboration, where the ceiling of the Human-AI unit genuinely rises because of your presence. That transition is unlocked by developing <strong>${DIM_NAMES[weak]}</strong> from its current level to Established.`,
-    V3: `This profile reflects a practitioner who has achieved genuine Human-AI integration. You and AI together produce outcomes that neither could reach independently — and this is not yet common. <strong>Your ${DIM_NAMES[dom]} is your signature dimension</strong>: the capability that most defines your current contribution and most differentiates you from practitioners at lower Vector classes. The path to V4 is less a personal development journey than a contribution shift: not just directing AI yourself, but designing how others in your team and organization direct AI.`,
-    V4: `This profile reflects a practitioner operating at the architecture level — you design the conditions in which others perform at higher Vector. <strong>This is a rare capability</strong>, and organizations that have practitioners at this level and deploy them well hold a genuine competitive advantage. Your role is not simply to perform but to raise the ceiling of every Human-AI unit you touch. The distance from V4 to V5 is not a personal development journey — it is a field contribution journey.`,
-    V5: `This profile reflects an exceptional practitioner — one whose Vector raises everyone else's. <strong>V5 is rare by design</strong>: it describes individuals whose presence, thinking, and frameworks elevate the field, not just their immediate organization. The V5 practitioner's most important contribution is the development of V4s: the deliberate investment in others' capability that multiplies your Vector beyond your own direct work.`
+    V1: `This profile reflects a practitioner at the beginning of their Human-AI collaboration journey. The dimensions that determine your Vector are all actively developing - and all are developable through deliberate practice. <strong>Orchestration Intelligence is your highest-leverage starting point</strong>: the practitioner who learns to direct AI with intent, rather than use it as a sophisticated search engine, activates all other VECTOR dimensions more rapidly. The transition from V1 to V2 is achievable within weeks for someone who practices deliberately.`,
+    V2: `This profile reflects a practitioner who has moved beyond transactional AI use and is developing genuine directional capability. You know when AI is wrong more often than you accept output without question, and you have begun developing the framing and evaluation habits that characterize high-Vector work. <strong>The gap between V2 and V3 is the most consequential in the VECTOR scale</strong> - it is where AI use becomes AI collaboration, where the ceiling of the Human-AI unit genuinely rises because of your presence. That transition is unlocked by developing <strong>${DIM_NAMES[weak]}</strong> from its current level to Established.`,
+    V3: `This profile reflects a practitioner who has achieved genuine Human-AI integration. You and AI together produce outcomes that neither could reach independently - and this is not yet common. <strong>Your ${DIM_NAMES[dom]} is your signature dimension</strong>: the capability that most defines your current contribution and most differentiates you from practitioners at lower Vector classes. The path to V4 is less a personal development journey than a contribution shift: not just directing AI yourself, but designing how others in your team and organization direct AI.`,
+    V4: `This profile reflects a practitioner operating at the architecture level - you design the conditions in which others perform at higher Vector. <strong>This is a rare capability</strong>, and organizations that have practitioners at this level and deploy them well hold a genuine competitive advantage. Your role is not simply to perform but to raise the ceiling of every Human-AI unit you touch. The distance from V4 to V5 is not a personal development journey - it is a field contribution journey.`,
+    V5: `This profile reflects an exceptional practitioner - one whose Vector raises everyone else's. <strong>V5 is rare by design</strong>: it describes individuals whose presence, thinking, and frameworks elevate the field, not just their immediate organization. The V5 practitioner's most important contribution is the development of V4s: the deliberate investment in others' capability that multiplies your Vector beyond your own direct work.`
   };
   return n[cls] || n.V2;
 }
@@ -175,16 +179,16 @@ function getNextMove(scores, cls) {
     },
     V2: {
       title: `Develop ${DIM_NAMES[weak]} to Established`,
-      desc: `The gap between V2 and V3 is unlocked by your lowest dimension — ${DIM_NAMES[weak]}. This is your Next Vector Move. Not six things. This one specific thing, developed deliberately.`,
+      desc: `The gap between V2 and V3 is unlocked by your lowest dimension - ${DIM_NAMES[weak]}. This is your Next Vector Move. Not six things. This one specific thing, developed deliberately.`,
       practice: weak === 'E'
         ? 'Before escalating any ambiguous situation this week: attempt three directed iterations. If all three fail to resolve the ambiguity, then escalate. Name your reasoning explicitly each time.'
         : weak === 'V'
-          ? 'Before every significant AI engagement this week: write one paragraph. What problem are we actually solving — not what were we asked, but what are we actually solving, and why does the answer matter? Five minutes. Non-negotiable.'
-          : 'After every significant client or stakeholder meeting: spend 10 minutes answering these questions in writing. What was the emotional temperature? At what moment did it shift? Who was not speaking — and what were they communicating? What signal did I miss?',
+          ? 'Before every significant AI engagement this week: write one paragraph. What problem are we actually solving - not what were we asked, but what are we actually solving, and why does the answer matter? Five minutes. Non-negotiable.'
+          : 'After every significant client or stakeholder meeting: spend 10 minutes answering these questions in writing. What was the emotional temperature? At what moment did it shift? Who was not speaking - and what were they communicating? What signal did I miss?',
       timeline: 'Expected movement to V3: 12 to 18 weeks of consistent deliberate practice.'
     },
     V3: {
-      title: 'Design how others work with AI — not just how you work with it',
+      title: 'Design how others work with AI - not just how you work with it',
       desc: 'The V3 to V4 transition is a contribution shift. Your next move is to take ownership of one team-level AI practice and set a standard that others follow.',
       practice: 'Identify one specific AI direction practice that produces measurably better outcomes in your own work. This week: document it clearly enough that a colleague could replicate it without asking you questions. Share it in your next team meeting.',
       timeline: 'Expected V4 readiness: 6 to 12 months of sustained system-level contribution.'

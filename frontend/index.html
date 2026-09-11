@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VECTOR Assessment — Human-AI Capability Profile</title>
+<title>VECTOR Assessment - Human-AI Capability Profile</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -143,7 +143,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
     <h1 class="welcome-title">Discover Your<br><span>VECTOR</span></h1>
-    <p class="welcome-sub">A professional assessment of six dimensions of irreducibly human contribution in an AI-era organization. Questions are calibrated to your professional context. Answer honestly — not aspirationally.</p>
+    <p class="welcome-sub">A professional assessment of six dimensions of irreducibly human contribution in an AI-era organization. Questions are calibrated to your professional context. Answer honestly - not aspirationally.</p>
     <div class="welcome-meta">
       <div class="meta-item"><span class="meta-num">30</span><div class="meta-label">Questions</div></div>
       <div class="meta-item"><span class="meta-num">15</span><div class="meta-label">Minutes</div></div>
@@ -186,7 +186,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
     <div class="welcome-dims">
-      <span class="dim-pill">V — Vision Clarity</span><span class="dim-pill">E — Edge Judgment</span><span class="dim-pill">C — Context Fluency</span><span class="dim-pill">T — Trust Architecture</span><span class="dim-pill">O — Orchestration</span><span class="dim-pill">R — Range</span>
+      <span class="dim-pill">V - Vision Clarity</span><span class="dim-pill">E - Edge Judgment</span><span class="dim-pill">C - Context Fluency</span><span class="dim-pill">T - Trust Architecture</span><span class="dim-pill">O - Orchestration</span><span class="dim-pill">R - Range</span>
     </div>
     <div class="welcome-copyright">
       VECTOR is a proprietary framework developed by <strong>Krishnan Nilakantan (NK)</strong>.<br>
@@ -212,14 +212,14 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
   <div class="report-header">
     <div class="report-header-inner">
       <div>
-        <div class="report-eyebrow">VECTOR — Human-AI Capability Profile</div>
+        <div class="report-eyebrow">VECTOR - Human-AI Capability Profile</div>
         <div class="report-name" id="rName"></div>
         <div class="report-role-badge" id="rRole"></div>
         <div class="report-calibration" id="rCalibration"></div>
         <div class="report-date" id="rDate"></div>
       </div>
       <div>
-        <div class="class-label">VECTOR CLASS</div>
+        <div class="class-label">VECTOR SIGNATURE</div>
         <div class="class-display" id="rClass"></div>
         <div class="class-name" id="rClassName"></div>
         <div class="sig-display" id="rSig"></div>
@@ -236,7 +236,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
     <div class="footer-logo">VECTOR</div>
     <div class="footer-actions">
       <button class="btn-restart" onclick="restart()">Retake Assessment</button>
-      <button class="btn-print" onclick="downloadReport()">Save as PDF</button>
+      <button class="btn-print" type="button" onclick="downloadReport()">Download HTML Report</button>
     </div>
     <div class="footer-meta">VECTOR &copy; Krishnan Nilakantan (NK)<br>Confidential Assessment Report</div>
   </div>
@@ -318,7 +318,7 @@ function renderQ(){
     <div class="q-accent"></div>
     <div class="q-num">Question ${currentQ+1} of ${QUESTIONS.length}</div>
     <div class="q-text">${escapeHtml(q.text)}</div>
-    <div class="q-instruction">${q.type==='sit'?'Choose the option that most closely describes what you would actually do.':'Select the statement that most accurately describes you as you are today — not as you aspire to be.'}</div>
+    <div class="q-instruction">${q.type==='sit'?'Choose the option that most closely describes what you would actually do.':'Select the statement that most accurately describes you as you are today - not as you aspire to be.'}</div>
     <div class="options-wrap">${optHtml}</div>
     <div class="q-nav">
       <button class="btn-back" onclick="goBack()" style="${currentQ===0?'visibility:hidden':''}">Back</button>
@@ -360,19 +360,28 @@ async function submitAssessment(){
     alert('Error saving assessment: '+err.message);
   }
 }
+function neatVectorSign(r){
+  const clsMatch = String(r && r.vector_class || '').match(/^V[1-5]$/);
+  const dom = r && r.dominant && 'VECTOR'.includes(r.dominant) ? r.dominant : '';
+  if (clsMatch && dom) return clsMatch[0] + ' - ' + dom;
+  const parsed = String(r && r.vector_sign || '').match(/^(V[1-5])\s*-\s*([VECTOR])$/);
+  if (parsed) return parsed[1] + ' - ' + parsed[2];
+  return (clsMatch ? clsMatch[0] : 'V1') + ' - ' + (dom || 'V');
+}
 function renderReport(r){
   const now=new Date(r.timestamp||Date.now());
   const ds=now.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const sign = neatVectorSign(r);
   document.getElementById('rName').textContent=userData.name;
   document.getElementById('rRole').textContent=r.role_label||userData.role;
   document.getElementById('rCalibration').textContent='Assessment calibrated for '+(r.role_label||userData.role)+' professionals';
   document.getElementById('rDate').textContent='Assessment completed: '+ds;
-  document.getElementById('rClass').textContent=r.vector_class;
-  document.getElementById('rClassName').textContent=(r.class_name||'')+' — '+(r.class_desc||'');
-  document.getElementById('rSig').textContent='Vector Signature: '+r.vector_sign;
+  document.getElementById('rClass').textContent=sign;
+  document.getElementById('rClassName').textContent=(r.vector_class||'')+'  '+(r.class_name||'')+' - '+(r.class_desc||'');
+  document.getElementById('rSig').textContent='Vector Signature: '+sign;
   const dimRows=(r.dimensions||[]).map(d=>{
     const pct=(d.level/5)*100;
-    return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter-badge" style="background:${d.color}">${d.dim}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml((d.level_name||'').toUpperCase())}</div></div><div class="dim-score-num">${d.level}/5</div></div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${pct}%;background:${d.color}"></div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
+    return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter-badge" style="background:${d.color}">${d.dim}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml((d.level_name||'').toUpperCase())}</div></div><div class="dim-score-num">${d.level} / 5</div></div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${pct}%;background:${d.color}"></div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
   }).join('');
   const scaleNodes=['V1','V2','V3','V4','V5'].map(v=>{
     const active=v===r.vector_class;
@@ -386,13 +395,30 @@ function renderReport(r){
   const nextCls=r.next_class;
   document.getElementById('reportBody').innerHTML=`
     <div class="r-section"><div class="r-section-title">Dimension Profile</div><div class="r-section-rule"></div><div class="dim-grid">${dimRows}</div></div>
-    <div class="r-section"><div class="r-section-title">Profile Interpretation</div><div class="r-section-rule"></div><div class="narrative-card"><p>${r.narrative||''}</p><p>Your dominant dimension is <strong>${escapeHtml((r.dimensions||[]).find(d=>d.dim===r.dominant)?.name||r.dominant||'')}</strong> — the capability that most defines your current contribution in human-AI work. Your Vector Signature of <strong>${escapeHtml(r.vector_sign)}</strong> identifies a practitioner whose most reliable differentiator is ${escapeHtml(r.dominant_blurb||'')}.</p></div></div>
-    <div class="r-section"><div class="r-section-title">Characteristic Profile</div><div class="r-section-rule"></div><div class="sb-grid"><div class="sb-card"><div class="sb-title">Established strengths</div>${strengths.length?strengths.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> — ${escapeHtml(d.level_name)}</div>`).join(''):'<div class="sb-item">Continue developing across all dimensions to establish clear strengths.</div>'}</div><div class="sb-card"><div class="sb-title">Development priorities</div>${gaps.length?gaps.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> — ${escapeHtml(d.level_name)} — primary development target</div>`).join(''):'<div class="sb-item">Your profile is strong across dimensions. Focus on advancing your highest dimensions toward Defining.</div>'}</div></div></div>
+    <div class="r-section"><div class="r-section-title">Profile Interpretation</div><div class="r-section-rule"></div><div class="narrative-card"><p>${r.narrative||''}</p><p>Your dominant dimension is <strong>${escapeHtml((r.dimensions||[]).find(d=>d.dim===r.dominant)?.name||r.dominant||'')}</strong> - the capability that most defines your current contribution in human-AI work. Your Vector Signature of <strong>${escapeHtml(sign)}</strong> identifies a practitioner whose most reliable differentiator is ${escapeHtml(r.dominant_blurb||'')}.</p></div></div>
+    <div class="r-section"><div class="r-section-title">Characteristic Profile</div><div class="r-section-rule"></div><div class="sb-grid"><div class="sb-card"><div class="sb-title">Established strengths</div>${strengths.length?strengths.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</div>`).join(''):'<div class="sb-item">Continue developing across all dimensions to establish clear strengths.</div>'}</div><div class="sb-card"><div class="sb-title">Development priorities</div>${gaps.length?gaps.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)} - primary development target</div>`).join(''):'<div class="sb-item">Your profile is strong across dimensions. Focus on advancing your highest dimensions toward Defining.</div>'}</div></div></div>
     <div class="r-section"><div class="r-section-title">Next Vector Move</div><div class="r-section-rule"></div><div class="dev-card"><div class="dev-move">${escapeHtml(move.title||'')}</div><div class="dev-desc">${escapeHtml(move.desc||'')}</div><div class="dev-practice-label">RECOMMENDED PRACTICE</div><div class="dev-practice">${escapeHtml(move.practice||'')}</div><div class="dev-timeline">${escapeHtml(move.timeline||'')}</div></div></div>
-    <div class="r-section"><div class="r-section-title">VECTOR Scale</div><div class="r-section-rule"></div><div class="scale-track">${scaleNodes}</div><div class="scale-desc">You are assessed at <strong>${escapeHtml(r.vector_class)} — ${escapeHtml(r.class_name||'')}</strong>. ${nextCls?'The next classification is <strong>'+escapeHtml(nextCls)+' — '+escapeHtml(r.next_class_name||'')+'</strong>. The Next Vector Move above is the specific practice that closes the gap.':'You are at the highest VECTOR classification.'}</div></div>`;
+    <div class="r-section"><div class="r-section-title">VECTOR Scale</div><div class="r-section-rule"></div><div class="scale-track">${scaleNodes}</div><div class="scale-desc">You are assessed at <strong>${escapeHtml(r.vector_class)} - ${escapeHtml(r.class_name||'')}</strong>. ${nextCls?'The next classification is <strong>'+escapeHtml(nextCls)+' - '+escapeHtml(r.next_class_name||'')+'</strong>. The Next Vector Move above is the specific practice that closes the gap.':'You are at the highest VECTOR classification.'}</div></div>`;
   showScreen('report');
 }
-function downloadReport(){ window.print(); }
+function downloadReport(){
+  const styles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+  const report = document.getElementById('report');
+  const name = (userData.name || 'assessment').replace(/[^\w\- ]+/g, '').trim() || 'assessment';
+  const html = '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8"><title>VECTOR Report - '
+    + name + '</title><style>' + styles
+    + '\n#report{display:flex !important;} .report-footer{display:none !important;} body{background:#F7F9FC;color:#1A2B3C;}</style></head><body>'
+    + report.outerHTML + '</body></html>';
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'VECTOR-Report-' + name.replace(/\s+/g, '-') + '.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
 </script>
 </body>
 </html>

@@ -10,7 +10,7 @@ npm install
 npm start
 ```
 
-Then open `http://localhost:3000/VECTORASSESSMENTENGINE` and hard-refresh (Ctrl+Shift+R). The welcome page must show a gold bar: **BUILD FIX-2**. If that bar is missing, the browser is still loading old files.
+Then open `http://localhost:3000/VECTORASSESSMENTENGINE` and hard-refresh (Ctrl+Shift+R). The welcome page must show a gold bar: **BUILD FIX-3**. If that bar is missing, the browser is still loading old files.
 
 You can also open `VECTOR.html` from this folder in a browser (no server needed for the assessment and HTML download).
 
@@ -36,9 +36,9 @@ Server runs on: `http://localhost:3000/VECTORASSESSMENTENGINE`
 - Users go to the static link
 - Login with: Email, Employee ID, Name, Role, Attempt Type
 - Answer 30 role-specific questions
-- Get VECTOR class (V1–V5) and Vector signature (for example `V3 - V`)
+- Get VECTOR class (V1–V5) as the large report heading and Vector signature (for example `V4-V`)
 - Data auto-saves to **`data/assessments.xlsx`** on the machine running the server (created automatically; this folder is gitignored)
-- On the report screen, use **Save as PDF** (browser print dialog)
+- On the report screen, use **Download Report** to save a formatted HTML report (open it and use the browser Print dialog to save as PDF)
 
 Admin Excel export: `http://localhost:3000/admin` → Download All Results (Excel), which is the same file.
 

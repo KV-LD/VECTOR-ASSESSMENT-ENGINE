@@ -100,7 +100,23 @@ function calculateVectorSign(scores) {
     : deriveClass(scores);
   const cls = String(derived.cls || '').match(/^V[1-5]$/) ? derived.cls : 'V1';
   const dom = 'VECTOR'.includes(derived.dom) ? derived.dom : 'V';
-  return `${cls} - ${dom}`;
+  return `${cls}-${dom}`;
+}
+
+function cleanDisplayText(value) {
+  let s = String(value == null ? '' : value);
+  s = s.replace(/Â€["”]|Â€[“”"'˜™]|â€[”–—“”˜™]|â€\u009d/gi, ' - ');
+  s = s.replace(/â€”|â€“|â€œ|â€\u009d|â€™|â€˜|â€¦/g, ' - ');
+  s = s.replace(/[\u2014\u2013\u2015\u2012\u2010]/g, ' - ');
+  s = s.replace(/[\u2018\u2019]/g, "'");
+  s = s.replace(/[\u201C\u201D]/g, '"');
+  s = s.replace(/\u00a0/g, ' ');
+  s = s.replace(/[€£#]/g, ' - ');
+  s = s.replace(/Â/g, '');
+  s = s.replace(/\s*-\s*/g, ' - ');
+  s = s.replace(/\s+/g, ' ').trim();
+  s = s.replace(/^-\s*/, '').replace(/\s*-$/, '');
+  return s;
 }
 
 function assignVectorClass(scores) {
@@ -224,7 +240,7 @@ function dominantBlurb(dom) {
 function generateReport(scores, _responses, extras = {}) {
   const { cls, dom } = deriveClass(scores);
   const cd = CLASSES[cls];
-  const vectorSign = `${cls} - ${dom}`;
+  const vectorSign = `${cls}-${dom}`;
   const levels = {};
   DIM_ORDER.forEach((d) => { levels[d] = scores[d].level; });
 
@@ -269,6 +285,7 @@ module.exports = {
   assignVectorClass,
   deriveClass,
   generateReport,
+  cleanDisplayText,
   scoreToLevel,
   questionsForRole,
   CLASSES,

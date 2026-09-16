@@ -5,7 +5,7 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const questionsByRole = require('./questions');
-const { calculateScores, generateReport } = require('./scoring');
+const { calculateScores, generateReport, cleanDisplayText } = require('./scoring');
 
 const app = express();
 const PORT = 3000;
@@ -93,10 +93,7 @@ app.post('/api/login', (req, res) => {
 });
 
 function cleanText(value) {
-  return String(value)
-    .replace(/â€”|â€“|â€œ|â€\u009d/g, ' - ')
-    .replace(/[\u2014\u2013\u2015]/g, ' - ')
-    .replace(/\u00a0/g, ' ');
+  return cleanDisplayText(value);
 }
 
 function cleanQuestions(questions) {

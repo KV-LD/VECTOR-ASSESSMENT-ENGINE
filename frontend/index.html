@@ -63,7 +63,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .opt-item.selected{border-color:var(--navy);background:#EEF2F8}
 .opt-badge{width:28px;height:28px;border-radius:6px;background:var(--light);display:flex;align-items:center;justify-content:center;font-family:"DM Mono",monospace;font-size:11px;font-weight:500;color:var(--gray);flex-shrink:0;transition:all 0.15s}
 .opt-item.selected .opt-badge{background:var(--navy);color:var(--white)}
-.opt-text{font-size:13.5px;color:var(--text);line-height:1.57;padding-top:3px}
+.opt-text{font-size:13.5px;color:var(--text);line-height:1.57;padding-top:3px;text-transform:none}
 .q-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-top:1px solid var(--light)}
 .btn-back{font-size:13px;color:var(--gray);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px}
 .btn-next{background:var(--navy);color:var(--white);font-size:13px;font-weight:500;padding:10px 24px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;opacity:0.35;pointer-events:none}
@@ -72,31 +72,30 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 #report{background:var(--off);color:var(--text)}
 .report-header{background:var(--navy2);position:relative;overflow:hidden}
 .report-header::before{content:"";position:absolute;top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,232,0.06) 0%,transparent 70%)}
-.report-header-inner{padding:48px 56px;position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:24px}
-.report-eyebrow{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:6px}
-.report-name{font-family:"DM Serif Display",serif;font-size:clamp(24px,4vw,38px);color:var(--white);margin-bottom:4px}
-.report-role-badge{font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);margin-bottom:4px;letter-spacing:1px}
-.report-calibration{font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:4px;font-style:italic}
+.report-header-inner{padding:48px 56px 40px;position:relative;z-index:1;display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.report-eyebrow{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:10px}
+.report-name{font-family:"DM Serif Display",serif;font-size:clamp(28px,4.5vw,42px);color:var(--white);margin-bottom:8px}
+.report-role-badge{font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);margin-bottom:6px;letter-spacing:1px}
+.report-calibration{font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:4px;font-style:italic}
 .report-date{font-family:"DM Mono",monospace;font-size:11px;color:var(--gray)}
-.class-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:2px;color:var(--gray);text-align:right;margin-bottom:4px}
-.class-display{font-family:"DM Serif Display",serif;font-size:clamp(36px,5vw,62px);color:var(--gold);line-height:1;text-align:right}
-.class-name{font-size:13px;color:var(--gray);margin-top:4px;text-align:right}
-.sig-display{font-family:"DM Mono",monospace;font-size:13px;color:var(--cyan);margin-top:6px;letter-spacing:2px;text-align:right}
+.report-class-block{text-align:center;margin-top:28px}
+.class-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:rgba(138,155,176,0.95);text-align:center;margin-bottom:8px}
+.class-display{font-family:"DM Serif Display",serif;font-size:clamp(64px,9vw,92px);color:var(--gold);line-height:0.9;text-align:center}
+.class-name{font-size:16px;color:rgba(255,255,255,0.78);margin-top:12px;text-align:center}
+.sig-display{font-family:"DM Mono",monospace;font-size:13px;color:var(--cyan);margin-top:10px;letter-spacing:2px;text-align:center}
 .report-body{max-width:900px;margin:0 auto;padding:48px 32px}
 .r-section{margin-bottom:48px}
-.r-section-title{font-family:"DM Serif Display",serif;font-size:22px;color:var(--navy);margin-bottom:6px}
-.r-section-rule{height:2px;background:var(--gold);width:40px;margin-bottom:24px}
-.dim-grid{display:flex;flex-direction:column;gap:14px}
-.dim-row{background:var(--white);border-radius:10px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
-.dim-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.dim-letter-badge{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",serif;font-size:18px;color:var(--white);flex-shrink:0}
-.dim-name-wrap{flex:1;margin-left:12px}
-.dim-fullname{font-size:14px;font-weight:500;color:var(--text)}
-.dim-level-name{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1px;color:var(--gray);margin-top:2px}
-.dim-score-num{font-family:"DM Mono",monospace;font-size:18px;color:var(--text)}
-.dim-bar-track{height:5px;background:var(--light);border-radius:3px;overflow:hidden;margin-bottom:12px}
-.dim-bar-fill{height:100%;border-radius:3px}
-.dim-interpretation{font-size:13px;color:#4A5568;line-height:1.65}
+.r-section-title{font-family:"DM Serif Display",serif;font-size:26px;color:var(--navy);margin-bottom:18px}
+.r-section-rule{display:none}
+.dim-grid{display:flex;flex-direction:column;gap:16px}
+.dim-row{background:var(--white);border-radius:16px;padding:24px 28px;border:1px solid #E4EAF1}
+.dim-row-top{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px}
+.dim-letter{width:32px;font-family:"DM Serif Display",serif;font-size:26px;color:#C5CDD6;line-height:1;flex-shrink:0;font-style:italic}
+.dim-name-wrap{flex:1}
+.dim-fullname{font-size:16px;font-weight:600;color:var(--navy)}
+.dim-level-name{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1.4px;color:var(--gray);margin-top:4px;text-transform:uppercase}
+.dim-score-num{font-family:"DM Serif Display",serif;font-size:22px;color:var(--navy);flex-shrink:0}
+.dim-interpretation{font-size:14px;color:#4A5568;line-height:1.7}
 .narrative-card{background:var(--white);border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
 .narrative-card p{font-size:14px;line-height:1.8;color:var(--text);margin-bottom:14px}
 .narrative-card strong{color:var(--navy);font-weight:600}
@@ -111,11 +110,12 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .dev-practice-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:8px}
 .dev-practice{background:rgba(255,255,255,0.06);border-radius:8px;padding:16px;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.65;border-left:3px solid var(--gold);margin-bottom:16px}
 .dev-timeline{font-family:"DM Mono",monospace;font-size:11px;color:var(--gray)}
-.scale-track{display:flex;gap:8px;margin:20px 0}
-.scale-node{flex:1;border-radius:8px;padding:14px 8px;text-align:center}
-.scale-node.active{transform:translateY(-4px)}
-.scale-v{font-family:"DM Mono",monospace;font-size:12px;font-weight:500;margin-bottom:3px}
-.scale-n{font-size:10px;opacity:0.75}
+.scale-track{display:flex;align-items:flex-end;gap:8px;margin:20px 0 12px}
+.scale-node{flex:1;border-radius:12px;padding:16px 8px;text-align:center;background:transparent}
+.scale-node.active{background:#fff;box-shadow:0 10px 28px rgba(15,34,64,0.08)}
+.scale-v{font-family:"DM Mono",monospace;font-size:12px;font-weight:500;margin-bottom:4px;color:#9AA8B8}
+.scale-n{font-size:11px;color:#9AA8B8}
+.scale-node.active .scale-v,.scale-node.active .scale-n{color:var(--navy)}
 .scale-desc{font-size:13px;color:#4A5568;line-height:1.55;margin-top:12px}
 .report-copyright{background:var(--white);border-radius:10px;padding:24px 32px;margin:0 auto 32px;max-width:900px;font-size:12px;color:var(--gray);line-height:1.8;border-left:4px solid var(--gold)}
 .report-copyright strong{color:var(--navy)}
@@ -131,6 +131,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
   #report{display:flex!important;background:white!important}
   .report-header{background:#0F2240!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .report-body{padding:24px!important}
+  .class-display{color:#C9A84C!important}
   .dim-row,.narrative-card,.sb-card,.report-copyright{box-shadow:none!important;border:1px solid #E8EEF4!important;page-break-inside:avoid}
   .dev-card{background:#0F2240!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -140,7 +141,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-2 · 11 Sep 2026 · If this gold bar is missing you are running OLD files · Signature shows as V3 - V</div>
+    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-3 · 16 Sep 2026 · If this gold bar is missing you are running OLD files · Report shows VECTOR CLASS V4 and signature V4-V</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -214,14 +215,14 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
   <div class="report-header">
     <div class="report-header-inner">
       <div>
-        <div class="report-eyebrow">VECTOR - Human-AI Capability Profile</div>
+        <div class="report-eyebrow">VECTOR — Human-AI Capability Profile</div>
         <div class="report-name" id="rName"></div>
         <div class="report-role-badge" id="rRole"></div>
         <div class="report-calibration" id="rCalibration"></div>
         <div class="report-date" id="rDate"></div>
       </div>
-      <div>
-        <div class="class-label">VECTOR SIGNATURE</div>
+      <div class="report-class-block">
+        <div class="class-label">VECTOR CLASS</div>
         <div class="class-display" id="rClass"></div>
         <div class="class-name" id="rClassName"></div>
         <div class="sig-display" id="rSig"></div>
@@ -238,7 +239,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
     <div class="footer-logo">VECTOR</div>
     <div class="footer-actions">
       <button class="btn-restart" onclick="restart()">Retake Assessment</button>
-      <button class="btn-print" type="button" onclick="downloadReport()">Download HTML Report</button>
+      <button class="btn-print" type="button" onclick="downloadReport()">Download Report</button>
     </div>
     <div class="footer-meta">VECTOR &copy; Krishnan Nilakantan (NK)<br>Confidential Assessment Report</div>
   </div>
@@ -246,7 +247,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <script>
 const API = '';
-const BUILD = 'FIX-2';
+const BUILD = 'FIX-3';
 const QB={
 eng:[
 {id:"V1",dim:"V",type:"sit",text:"Your product manager sends a ticket: 'Improve user retention.' The codebase and data are available. Before engaging AI you:",opts:[{l:"A",t:"Start building immediately - the requirement is clear enough to begin.",s:1},{l:"B",t:"Clarify with the PM which user segment or metric defines retention.",s:2},{l:"C",t:"Write a one-paragraph problem statement defining what retention means in this product context, which technical intervention is most likely to move it, and what success looks like - before writing a single prompt.",s:4},{l:"D",t:"Ask the PM to provide a full technical specification before you engage.",s:1}]},
@@ -508,7 +509,23 @@ function calculateVectorSign(scores) {
     : deriveClass(scores);
   const cls = String(derived.cls || '').match(/^V[1-5]$/) ? derived.cls : 'V1';
   const dom = 'VECTOR'.includes(derived.dom) ? derived.dom : 'V';
-  return `${cls} - ${dom}`;
+  return `${cls}-${dom}`;
+}
+
+function cleanDisplayText(value) {
+  let s = String(value == null ? '' : value);
+  s = s.replace(/Â€["”]|Â€[“”"'˜™]|â€[”–—“”˜™]|â€\u009d/gi, ' - ');
+  s = s.replace(/â€”|â€“|â€œ|â€\u009d|â€™|â€˜|â€¦/g, ' - ');
+  s = s.replace(/[\u2014\u2013\u2015\u2012\u2010]/g, ' - ');
+  s = s.replace(/[\u2018\u2019]/g, "'");
+  s = s.replace(/[\u201C\u201D]/g, '"');
+  s = s.replace(/\u00a0/g, ' ');
+  s = s.replace(/[€£#]/g, ' - ');
+  s = s.replace(/Â/g, '');
+  s = s.replace(/\s*-\s*/g, ' - ');
+  s = s.replace(/\s+/g, ' ').trim();
+  s = s.replace(/^-\s*/, '').replace(/\s*-$/, '');
+  return s;
 }
 
 function assignVectorClass(scores) {
@@ -632,7 +649,7 @@ function dominantBlurb(dom) {
 function generateReport(scores, _responses, extras = {}) {
   const { cls, dom } = deriveClass(scores);
   const cd = CLASSES[cls];
-  const vectorSign = `${cls} - ${dom}`;
+  const vectorSign = `${cls}-${dom}`;
   const levels = {};
   DIM_ORDER.forEach((d) => { levels[d] = scores[d].level; });
 
@@ -713,10 +730,10 @@ async function startAssessment(){
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-2.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-3.');
     return;
   }
-  QUESTIONS=interleave(bank.map(q=>({...q, text:String(q.text).replace(/[#\u2014\u2013]/g,' - '), opts:q.opts.map(o=>({...o, t:String(o.t).replace(/[#\u2014\u2013]/g,' - ')}))})));
+  QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));
   currentQ=0;answers={};
   try{
     const loginRes=await fetch((API||'')+'/api/login',{
@@ -742,11 +759,11 @@ function renderQ(){
   document.getElementById('progressText').textContent=(currentQ+1)+' / '+QUESTIONS.length;
   const ans=answers[q.id];
   const isLast=currentQ===QUESTIONS.length-1;
-  const optHtml=q.opts.map(o=>`<div class="opt-item${ans===o.s?' selected':''}" onclick="selectAns('${q.id}',${o.s},this)"><div class="opt-badge">${escapeHtml(o.l)}</div><div class="opt-text">${escapeHtml(o.t)}</div></div>`).join('');
+  const optHtml=q.opts.map(o=>`<div class="opt-item${ans===o.s?' selected':''}" onclick="selectAns('${q.id}',${o.s},this)"><div class="opt-badge">${escapeHtml(o.l)}</div><div class="opt-text">${escapeHtml(cleanDisplayText(o.t))}</div></div>`).join('');
   document.getElementById('questionCard').innerHTML=`
     <div class="q-accent"></div>
     <div class="q-num">Question ${currentQ+1} of ${QUESTIONS.length}</div>
-    <div class="q-text">${escapeHtml(q.text)}</div>
+    <div class="q-text">${escapeHtml(cleanDisplayText(q.text))}</div>
     <div class="q-instruction">${q.type==='sit'?'Choose the option that most closely describes what you would actually do.':'Select the statement that most accurately describes you as you are today - not as you aspire to be.'}</div>
     <div class="options-wrap">${optHtml}</div>
     <div class="q-nav">
@@ -791,42 +808,41 @@ async function submitAssessment(){
 function neatVectorSign(r){
   const clsMatch = String(r && r.vector_class || '').match(/^V[1-5]$/);
   const dom = r && r.dominant && 'VECTOR'.includes(r.dominant) ? r.dominant : '';
-  if (clsMatch && dom) return clsMatch[0] + ' - ' + dom;
-  const parsed = String(r && r.vector_sign || '').match(/^(V[1-5])\s*-\s*([VECTOR])$/);
-  if (parsed) return parsed[1] + ' - ' + parsed[2];
-  return (clsMatch ? clsMatch[0] : 'V1') + ' - ' + (dom || 'V');
+  if (clsMatch && dom) return clsMatch[0] + '-' + dom;
+  const parsed = String(r && r.vector_sign || '').match(/^(V[1-5])\s*-?\s*([VECTOR])$/);
+  if (parsed) return parsed[1] + '-' + parsed[2];
+  return (clsMatch ? clsMatch[0] : 'V1') + '-' + (dom || 'V');
 }
 function renderReport(r){
   const now=new Date(r.timestamp||Date.now());
   const ds=now.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   const sign = neatVectorSign(r);
+  const cls = String(r.vector_class || sign.split('-')[0] || 'V1');
   document.getElementById('rName').textContent=userData.name;
   document.getElementById('rRole').textContent=r.role_label||userData.role;
   document.getElementById('rCalibration').textContent='Assessment calibrated for '+(r.role_label||userData.role)+' professionals';
   document.getElementById('rDate').textContent='Assessment completed: '+ds;
-  document.getElementById('rClass').textContent=sign;
-  document.getElementById('rClassName').textContent=(r.vector_class||'')+'  '+(r.class_name||'')+' - '+(r.class_desc||'');
+  document.getElementById('rClass').textContent=cls;
+  document.getElementById('rClassName').textContent=(r.class_name||'')+' — '+(r.class_desc||'');
   document.getElementById('rSig').textContent='Vector Signature: '+sign;
   const dimRows=(r.dimensions||[]).map(d=>{
-    const pct=(d.level/5)*100;
-    return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter-badge" style="background:${d.color}">${d.dim}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml((d.level_name||'').toUpperCase())}</div></div><div class="dim-score-num">${d.level} / 5</div></div><div class="dim-bar-track"><div class="dim-bar-fill" style="width:${pct}%;background:${d.color}"></div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
+    return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter">${escapeHtml(d.dim)}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml(d.level_name||'')}</div></div><div class="dim-score-num">${d.level}/5</div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
   }).join('');
   const scaleNodes=['V1','V2','V3','V4','V5'].map(v=>{
     const active=v===r.vector_class;
-    const bgs={V1:'#F0F4F8',V2:'#E8EEF8',V3:'#DCE8F5',V4:'#1A3A5C',V5:'#C9A84C'};
-    const txts={V1:'#4A5568',V2:'#2E4E8E',V3:'#1A4E7E',V4:'#FFFFFF',V5:'#1A2B3C'};
-    return `<div class="scale-node${active?' active':''}" style="background:${bgs[v]}"><div class="scale-v" style="color:${txts[v]}">${v}</div><div class="scale-n" style="color:${txts[v]}">${CLASSES[v].name}</div></div>`;
+    return `<div class="scale-node${active?' active':''}"><div class="scale-v">${v}</div><div class="scale-n">${CLASSES[v].name}</div></div>`;
   }).join('');
   const strengths=r.strengths||[];
   const gaps=r.gaps||[];
   const move=r.next_move||{};
   const nextCls=r.next_class;
+  const domName=escapeHtml((r.dimensions||[]).find(d=>d.dim===r.dominant)?.name||r.dominant||'');
   document.getElementById('reportBody').innerHTML=`
-    <div class="r-section"><div class="r-section-title">Dimension Profile</div><div class="r-section-rule"></div><div class="dim-grid">${dimRows}</div></div>
-    <div class="r-section"><div class="r-section-title">Profile Interpretation</div><div class="r-section-rule"></div><div class="narrative-card"><p>${r.narrative||''}</p><p>Your dominant dimension is <strong>${escapeHtml((r.dimensions||[]).find(d=>d.dim===r.dominant)?.name||r.dominant||'')}</strong> - the capability that most defines your current contribution in human-AI work. Your Vector Signature of <strong>${escapeHtml(sign)}</strong> identifies a practitioner whose most reliable differentiator is ${escapeHtml(r.dominant_blurb||'')}.</p></div></div>
-    <div class="r-section"><div class="r-section-title">Characteristic Profile</div><div class="r-section-rule"></div><div class="sb-grid"><div class="sb-card"><div class="sb-title">Established strengths</div>${strengths.length?strengths.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</div>`).join(''):'<div class="sb-item">Continue developing across all dimensions to establish clear strengths.</div>'}</div><div class="sb-card"><div class="sb-title">Development priorities</div>${gaps.length?gaps.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)} - primary development target</div>`).join(''):'<div class="sb-item">Your profile is strong across dimensions. Focus on advancing your highest dimensions toward Defining.</div>'}</div></div></div>
-    <div class="r-section"><div class="r-section-title">Next Vector Move</div><div class="r-section-rule"></div><div class="dev-card"><div class="dev-move">${escapeHtml(move.title||'')}</div><div class="dev-desc">${escapeHtml(move.desc||'')}</div><div class="dev-practice-label">RECOMMENDED PRACTICE</div><div class="dev-practice">${escapeHtml(move.practice||'')}</div><div class="dev-timeline">${escapeHtml(move.timeline||'')}</div></div></div>
-    <div class="r-section"><div class="r-section-title">VECTOR Scale</div><div class="r-section-rule"></div><div class="scale-track">${scaleNodes}</div><div class="scale-desc">You are assessed at <strong>${escapeHtml(r.vector_class)} - ${escapeHtml(r.class_name||'')}</strong>. ${nextCls?'The next classification is <strong>'+escapeHtml(nextCls)+' - '+escapeHtml(r.next_class_name||'')+'</strong>. The Next Vector Move above is the specific practice that closes the gap.':'You are at the highest VECTOR classification.'}</div></div>`;
+    <div class="r-section"><div class="r-section-title">Dimension Profile</div><div class="dim-grid">${dimRows}</div></div>
+    <div class="r-section"><div class="r-section-title">Profile Interpretation</div><div class="narrative-card"><p>${r.narrative||''}</p><p>Your dominant dimension is <strong>${domName}</strong> — the capability that most defines your current contribution in human-AI work. Your Vector Signature of <strong>${escapeHtml(sign)}</strong> identifies a practitioner whose most reliable differentiator is ${escapeHtml(r.dominant_blurb||'')}.</p></div></div>
+    <div class="r-section"><div class="r-section-title">Characteristic Profile</div><div class="sb-grid"><div class="sb-card"><div class="sb-title">Established strengths</div>${strengths.length?strengths.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> — ${escapeHtml(d.level_name)}</div>`).join(''):'<div class="sb-item">Continue developing across all dimensions to establish clear strengths.</div>'}</div><div class="sb-card"><div class="sb-title">Development priorities</div>${gaps.length?gaps.map(d=>`<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> — ${escapeHtml(d.level_name)} — primary development target</div>`).join(''):'<div class="sb-item">Your profile is strong across dimensions. Focus on advancing your highest dimensions toward Defining.</div>'}</div></div></div>
+    <div class="r-section"><div class="r-section-title">Next Vector Move</div><div class="dev-card"><div class="dev-move">${escapeHtml(move.title||'')}</div><div class="dev-desc">${escapeHtml(move.desc||'')}</div><div class="dev-practice-label">RECOMMENDED PRACTICE</div><div class="dev-practice">${escapeHtml(move.practice||'')}</div><div class="dev-timeline">${escapeHtml(move.timeline||'')}</div></div></div>
+    <div class="r-section"><div class="r-section-title">VECTOR Scale</div><div class="scale-track">${scaleNodes}</div><div class="scale-desc">You are assessed at <strong>${escapeHtml(r.vector_class)} — ${escapeHtml(r.class_name||'')}</strong>. ${nextCls?'The next classification is <strong>'+escapeHtml(nextCls)+' — '+escapeHtml(r.next_class_name||'')+'</strong>. The Next Vector Move above is the specific practice that closes the gap.':'You are at the highest VECTOR classification.'}</div></div>`;
   showScreen('report');
 }
 function downloadReport(){

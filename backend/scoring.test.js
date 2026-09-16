@@ -3,7 +3,8 @@ const {
   calculateScores,
   deriveClass,
   calculateVectorSign,
-  generateReport
+  generateReport,
+  cleanDisplayText
 } = require('./scoring');
 
 describe('scoreToLevel', () => {
@@ -33,7 +34,7 @@ describe('VECTOR class and signature', () => {
     const { cls, dom } = deriveClass(scores);
     expect(cls).toBe('V1');
     expect(dom).toBe('V');
-    expect(calculateVectorSign(scores)).toBe('V1 - V');
+    expect(calculateVectorSign(scores)).toBe('V1-V');
   });
 
   test('O >= 2 yields Director V2', () => {
@@ -45,20 +46,29 @@ describe('VECTOR class and signature', () => {
     const scores = levels({ V: 3, E: 3, C: 3, O: 3, T: 3, R: 3 });
     const { cls, dom } = deriveClass(scores);
     expect(cls).toBe('V3');
-    expect(calculateVectorSign(scores)).toBe('V3 - V');
+    expect(calculateVectorSign(scores)).toBe('V3-V');
   });
 
   test('spread of 2 or more demotes class', () => {
     const scores = levels({ V: 4, E: 4, C: 1, O: 4, T: 4, R: 4 });
     expect(deriveClass(scores).cls).toBe('V3');
-    expect(calculateVectorSign(scores)).toBe('V3 - V');
+    expect(calculateVectorSign(scores)).toBe('V3-V');
   });
 
   test('never concatenates dimension scores into a sign', () => {
     const scores = levels({ V: 4, E: 4, C: 3, O: 3, T: 4, R: 4 });
     const sign = calculateVectorSign(scores);
     expect(sign).not.toMatch(/V4E4/);
-    expect(sign).toMatch(/^V\d - [VECTOR]$/);
+    expect(sign).toMatch(/^V\d-[VECTOR]$/);
+  });
+});
+
+describe('cleanDisplayText', () => {
+  test('strips UTF-8 dash mojibake including after uppercase', () => {
+    expect(cleanDisplayText('needs â€” a technically')).toBe('needs - a technically');
+    expect(cleanDisplayText('NEEDS Â€" A TECHNICALLY')).toBe('NEEDS - A TECHNICALLY');
+    expect(cleanDisplayText('needs # a technically')).toBe('needs - a technically');
+    expect(cleanDisplayText('needs £ a technically')).toBe('needs - a technically');
   });
 });
 
@@ -77,7 +87,7 @@ describe('calculateScores from responses', () => {
     expect(scores.V.level).toBe(5);
     expect(scores.O.level).toBe(5);
     const report = generateReport(scores, responses, { role: 'eng', name: 'Test' });
-    expect(report.vector_sign).toBe('V5 - V');
+    expect(report.vector_sign).toBe('V5-V');
     expect(report.vector_class).toBe('V5');
     expect(report.dimension_scores.V).toBe(5);
   });

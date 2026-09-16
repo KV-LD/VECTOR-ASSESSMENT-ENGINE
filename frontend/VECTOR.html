@@ -141,7 +141,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-3 · 16 Sep 2026 · If this gold bar is missing you are running OLD files · Report shows VECTOR CLASS V4 and signature V4-V</div>
+    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-4 · 16 Sep 2026 · If this gold bar is missing you are running OLD files · Download Report saves a file</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -239,7 +239,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
     <div class="footer-logo">VECTOR</div>
     <div class="footer-actions">
       <button class="btn-restart" onclick="restart()">Retake Assessment</button>
-      <button class="btn-print" type="button" onclick="downloadReport()">Download Report</button>
+      <button class="btn-print" type="button" id="downloadReportBtn">Download Report</button>
     </div>
     <div class="footer-meta">VECTOR &copy; Krishnan Nilakantan (NK)<br>Confidential Assessment Report</div>
   </div>
@@ -247,7 +247,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <script>
 const API = '';
-const BUILD = 'FIX-3';
+const BUILD = 'FIX-4';
 const QB={
 eng:[
 {id:"V1",dim:"V",type:"sit",text:"Your product manager sends a ticket: 'Improve user retention.' The codebase and data are available. Before engaging AI you:",opts:[{l:"A",t:"Start building immediately - the requirement is clear enough to begin.",s:1},{l:"B",t:"Clarify with the PM which user segment or metric defines retention.",s:2},{l:"C",t:"Write a one-paragraph problem statement defining what retention means in this product context, which technical intervention is most likely to move it, and what success looks like - before writing a single prompt.",s:4},{l:"D",t:"Ask the PM to provide a full technical specification before you engage.",s:1}]},
@@ -730,7 +730,7 @@ async function startAssessment(){
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-3.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-4.');
     return;
   }
   QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));
@@ -845,31 +845,126 @@ function renderReport(r){
     <div class="r-section"><div class="r-section-title">VECTOR Scale</div><div class="scale-track">${scaleNodes}</div><div class="scale-desc">You are assessed at <strong>${escapeHtml(r.vector_class)} — ${escapeHtml(r.class_name||'')}</strong>. ${nextCls?'The next classification is <strong>'+escapeHtml(nextCls)+' — '+escapeHtml(r.next_class_name||'')+'</strong>. The Next Vector Move above is the specific practice that closes the gap.':'You are at the highest VECTOR classification.'}</div></div>`;
   showScreen('report');
 }
-function downloadReport(){
-  const styles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
-  const report = document.getElementById('report');
+function reportBaseName(){
   const name = (userData.name || 'assessment').replace(/[^\w\- ]+/g, '').trim() || 'assessment';
-  const doc = '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8"><title>VECTOR Report - '
-    + name + '</title><style>' + styles
-    + '\n#report{display:flex !important;} .report-footer{display:none !important;} body{background:#F7F9FC;color:#1A2B3C;}</style></head><body>'
+  return 'VECTOR-Report-' + name.replace(/\s+/g, '-');
+}
+function buildStandaloneReportHtml(){
+  const styles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+  const source = document.getElementById('report');
+  const report = source.cloneNode(true);
+  const footer = report.querySelector('.report-footer');
+  if (footer) footer.remove();
+  report.classList.add('active');
+  report.style.display = 'flex';
+  const name = (userData.name || 'assessment').replace(/[^\w\- ]+/g, '').trim() || 'assessment';
+  return '<!DOCTYPE html>\n<html lang="en"><head><meta charset="UTF-8"><title>VECTOR Report - '
+    + name + '</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">'
+    + '<style>' + styles
+    + '\nhtml,body{background:#F7F9FC;color:#1A2B3C;}'
+    + '\n#report,.screen#report{display:flex !important;min-height:auto;}'
+    + '\n.report-footer{display:none !important;}'
+    + '</style></head><body>'
     + report.outerHTML + '</body></html>';
+}
+function saveBlob(blob, filename){
+  if (navigator.msSaveOrOpenBlob) {
+    navigator.msSaveOrOpenBlob(blob, filename);
+    return true;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+  setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 4000);
+  return true;
+}
+function postReportDownload(html, filename){
+  if (!/^https?:$/.test(location.protocol)) return false;
+  let iframe = document.getElementById('vectorDownloadFrame');
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.id = 'vectorDownloadFrame';
+    iframe.name = 'vectorDownloadFrame';
+    iframe.title = 'download';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = (API || '') + '/api/download-report';
+  form.target = 'vectorDownloadFrame';
+  form.style.display = 'none';
+  const htmlField = document.createElement('textarea');
+  htmlField.name = 'html';
+  htmlField.value = html;
+  const nameField = document.createElement('input');
+  nameField.type = 'hidden';
+  nameField.name = 'filename';
+  nameField.value = filename;
+  form.appendChild(htmlField);
+  form.appendChild(nameField);
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(function(){ form.remove(); }, 8000);
+  return true;
+}
+function downloadPdf(filename){
+  const source = document.getElementById('report');
+  const clone = source.cloneNode(true);
+  const footer = clone.querySelector('.report-footer');
+  if (footer) footer.remove();
+  clone.classList.add('active');
+  clone.style.display = 'flex';
+  clone.style.width = '800px';
+  clone.style.background = '#F7F9FC';
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-12000px;top:0;width:800px;background:#F7F9FC;';
+  holder.appendChild(clone);
+  document.body.appendChild(holder);
+  return window.html2pdf().set({
+    margin: [8, 8, 10, 8],
+    filename: filename,
+    pagebreak: { mode: ['css', 'legacy'], avoid: ['.dim-row', '.narrative-card', '.sb-card', '.dev-card'] },
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F7F9FC' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(clone).save().then(function(){
+    holder.remove();
+  }, function(){
+    holder.remove();
+    throw new Error('pdf failed');
+  });
+}
+function downloadReport(ev){
+  if (ev) ev.preventDefault();
+  const html = buildStandaloneReportHtml();
+  const base = reportBaseName();
+  const htmlName = base + '.html';
+  const pdfName = base + '.pdf';
+  const htmlBlob = new Blob(['\ufeff' + html], { type: 'application/octet-stream' });
   try {
-    const blob = new Blob([doc], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'VECTOR-Report-' + name.replace(/\s+/g, '-') + '.html';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    saveBlob(htmlBlob, htmlName);
+    postReportDownload(html, htmlName);
+    if (window.html2pdf) {
+      downloadPdf(pdfName).catch(function(){});
+    }
   } catch (err) {
-    const w = window.open('', '_blank');
-    if (w) { w.document.write(doc); w.document.close(); }
-    else { alert('Allow pop-ups to download the HTML report.'); }
+    console.error(err);
+    try { saveBlob(htmlBlob, htmlName); } catch (e2) {
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); w.focus(); w.print(); }
+      else { window.print(); }
+    }
   }
 }
+document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
 </script>
+<script src="vendor/html2pdf.bundle.min.js"></script>
 </body>
 </html>

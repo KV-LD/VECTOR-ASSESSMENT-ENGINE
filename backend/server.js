@@ -16,7 +16,8 @@ const ADMIN_USER = 'admin@ust.com';
 const ADMIN_PASS = bcrypt.hashSync('admin123', 10); // Change in production
 
 app.disable('etag');
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.header('Access-Control-Allow-Origin', '*');
@@ -290,6 +291,22 @@ app.get('/api/admin/export', async (req, res) => {
   }
 });
 
+function reportDownloadName(value) {
+  const cleaned = String(value || 'VECTOR-Report.html').replace(/[^\w.\-]+/g, '_');
+  return cleaned || 'VECTOR-Report.html';
+}
+
+app.post('/api/download-report', (req, res) => {
+  const html = typeof req.body.html === 'string' ? req.body.html : '';
+  if (!html || html.length > 5_000_000) {
+    return res.status(400).json({ error: 'Missing report HTML' });
+  }
+  const filename = reportDownloadName(req.body.filename);
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(html);
+});
+
 // Serve frontend
 app.get(['/', '/VECTORASSESSMENTENGINE', '/VECTOR.html'], (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -301,14 +318,22 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/admin.html'));
 });
 
-app.listen(PORT, async () => {
-  try {
-    await initializeExcel();
-  } catch (error) {
-    console.error('Failed to initialize Excel storage:', error);
-    process.exit(1);
-  }
-  console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
-  console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
-  console.log(`📁 Score data Excel: ${DATA_FILE}`);
-});
+function startServer() {
+  return app.listen(PORT, async () => {
+    try {
+      await initializeExcel();
+    } catch (error) {
+      console.error('Failed to initialize Excel storage:', error);
+      process.exit(1);
+    }
+    console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
+    console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
+    console.log(`📁 Score data Excel: ${DATA_FILE}`);
+  });
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { app, startServer, reportDownloadName };

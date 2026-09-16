@@ -141,7 +141,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-4 · 16 Sep 2026 · If this gold bar is missing you are running OLD files · Download Report saves a file</div>
+    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-5 · 16 Sep 2026 · If this gold bar is missing you are running OLD files · Excel saves after you finish all 30 questions</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -247,7 +247,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <script>
 const API = '';
-const BUILD = 'FIX-4';
+const BUILD = 'FIX-5';
 const QB={
 eng:[
 {id:"V1",dim:"V",type:"sit",text:"Your product manager sends a ticket: 'Improve user retention.' The codebase and data are available. Before engaging AI you:",opts:[{l:"A",t:"Start building immediately - the requirement is clear enough to begin.",s:1},{l:"B",t:"Clarify with the PM which user segment or metric defines retention.",s:2},{l:"C",t:"Write a one-paragraph problem statement defining what retention means in this product context, which technical intervention is most likely to move it, and what success looks like - before writing a single prompt.",s:4},{l:"D",t:"Ask the PM to provide a full technical specification before you engage.",s:1}]},
@@ -730,7 +730,7 @@ async function startAssessment(){
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-4.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-5.');
     return;
   }
   QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));
@@ -796,14 +796,33 @@ async function submitAssessment(){
   const report = generateReport(scores, answers, { role: userData.role, name: userData.name });
   renderReport(report);
   try{
-    const token=localStorage.getItem('token');
-    if(!token) return;
-    await fetch((API||'')+'/api/save-assessment',{
+    let token=localStorage.getItem('token');
+    if(!token){
+      const loginRes=await fetch((API||'')+'/api/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(userData)
+      });
+      if(loginRes.ok){
+        const loginData=await loginRes.json();
+        token=loginData.token;
+        localStorage.setItem('token', token);
+      }
+    }
+    if(!token) throw new Error('Could not reach the local server to save Excel. Keep npm start running and use http://localhost:3000/ (not a local VECTOR.html file).');
+    const saveRes=await fetch((API||'')+'/api/save-assessment',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({responses:answers})
     });
-  }catch(err){ console.warn('Excel save skipped', err); }
+    if(!saveRes.ok){
+      const err=await saveRes.json().catch(()=>({}));
+      throw new Error(err.error || ('Save failed ('+saveRes.status+')'));
+    }
+  }catch(err){
+    console.error('Excel save failed', err);
+    alert('Your report is on screen, but the Excel file was not updated.\n\nClose data\\assessments.xlsx if it is open in Excel, keep npm start running, then complete the assessment again.\n\n'+err.message);
+  }
 }
 function neatVectorSign(r){
   const clsMatch = String(r && r.vector_class || '').match(/^V[1-5]$/);

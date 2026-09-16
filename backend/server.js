@@ -11,7 +11,34 @@ const app = express();
 const PORT = 3000;
 const SECRET = 'vector-secret-key-change-in-production';
 const ADMIN_SECRET = 'admin-secret-key-change-in-production';
-const DATA_FILE = path.join(__dirname, '../data/assessments.xlsx');
+function dataFile() {
+  return process.env.VECTOR_DATA_FILE || path.join(__dirname, '../data/assessments.xlsx');
+}
+const USER_COLUMNS = [
+  { header: 'ID', key: 'id', width: 5 },
+  { header: 'Email', key: 'email', width: 25 },
+  { header: 'Employee ID', key: 'emp_id', width: 15 },
+  { header: 'Name', key: 'name', width: 25 },
+  { header: 'Role', key: 'role', width: 15 },
+  { header: 'Timestamp', key: 'timestamp', width: 20 },
+  { header: 'Attempt Type', key: 'attempt_type', width: 15 }
+];
+const RESULT_COLUMNS = [
+  { header: 'User Email', key: 'email', width: 25 },
+  { header: 'Employee ID', key: 'emp_id', width: 15 },
+  { header: 'Name', key: 'name', width: 25 },
+  { header: 'Role', key: 'role', width: 15 },
+  { header: 'Attempt', key: 'attempt_type', width: 15 },
+  { header: 'V Score', key: 'v_score', width: 10 },
+  { header: 'E Score', key: 'e_score', width: 10 },
+  { header: 'C Score', key: 'c_score', width: 10 },
+  { header: 'T Score', key: 't_score', width: 10 },
+  { header: 'O Score', key: 'o_score', width: 10 },
+  { header: 'R Score', key: 'r_score', width: 10 },
+  { header: 'Vector Sign', key: 'vector_sign', width: 15 },
+  { header: 'Vector Class', key: 'vector_class', width: 15 },
+  { header: 'Timestamp', key: 'timestamp', width: 20 }
+];
 const ADMIN_USER = 'admin@ust.com';
 const ADMIN_PASS = bcrypt.hashSync('admin123', 10); // Change in production
 
@@ -38,46 +65,40 @@ app.use(express.static(path.join(__dirname, '../frontend'), {
 
 // Initialize Excel file if not exists
 async function initializeExcel() {
-  const dataDir = path.dirname(DATA_FILE);
+  const file = dataFile();
+  const dataDir = path.dirname(file);
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
-  if (!fs.existsSync(DATA_FILE)) {
+  if (!fs.existsSync(file)) {
     const workbook = new ExcelJS.Workbook();
+    workbook.addWorksheet('Users').columns = USER_COLUMNS;
+    workbook.addWorksheet('Results').columns = RESULT_COLUMNS;
+    await workbook.xlsx.writeFile(file);
+    console.log(`Excel file initialized at ${file}`);
+  }
+}
 
-    // Users sheet
-    const usersSheet = workbook.addWorksheet('Users');
-    usersSheet.columns = [
-      { header: 'ID', key: 'id', width: 5 },
-      { header: 'Email', key: 'email', width: 25 },
-      { header: 'Employee ID', key: 'emp_id', width: 15 },
-      { header: 'Name', key: 'name', width: 25 },
-      { header: 'Role', key: 'role', width: 15 },
-      { header: 'Timestamp', key: 'timestamp', width: 20 },
-      { header: 'Attempt Type', key: 'attempt_type', width: 15 }
-    ];
+async function loadWorkbook() {
+  await initializeExcel();
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(dataFile());
+  const usersSheet = workbook.getWorksheet('Users') || workbook.addWorksheet('Users');
+  const resultsSheet = workbook.getWorksheet('Results') || workbook.addWorksheet('Results');
+  if (usersSheet.rowCount === 0) usersSheet.columns = USER_COLUMNS;
+  if (resultsSheet.rowCount === 0) resultsSheet.columns = RESULT_COLUMNS;
+  return { workbook, usersSheet, resultsSheet };
+}
 
-    // Results sheet
-    const resultsSheet = workbook.addWorksheet('Results');
-    resultsSheet.columns = [
-      { header: 'User Email', key: 'email', width: 25 },
-      { header: 'Employee ID', key: 'emp_id', width: 15 },
-      { header: 'Name', key: 'name', width: 25 },
-      { header: 'Role', key: 'role', width: 15 },
-      { header: 'Attempt', key: 'attempt_type', width: 15 },
-      { header: 'V Score', key: 'v_score', width: 10 },
-      { header: 'E Score', key: 'e_score', width: 10 },
-      { header: 'C Score', key: 'c_score', width: 10 },
-      { header: 'T Score', key: 't_score', width: 10 },
-      { header: 'O Score', key: 'o_score', width: 10 },
-      { header: 'R Score', key: 'r_score', width: 10 },
-      { header: 'Vector Sign', key: 'vector_sign', width: 15 },
-      { header: 'Vector Class', key: 'vector_class', width: 15 },
-      { header: 'Timestamp', key: 'timestamp', width: 20 }
-    ];
-
-    await workbook.xlsx.writeFile(DATA_FILE);
-    console.log(`✅ Excel file initialized at ${DATA_FILE}`);
+async function writeWorkbook(workbook) {
+  try {
+    await workbook.xlsx.writeFile(dataFile());
+  } catch (error) {
+    const locked = error && (error.code === 'EBUSY' || error.code === 'EPERM' || /busy|locked|permission/i.test(String(error.message)));
+    if (locked) {
+      throw new Error('Excel file is open in another program. Close data\\assessments.xlsx and complete the assessment again.');
+    }
+    throw error;
   }
 }
 
@@ -134,41 +155,36 @@ app.post('/api/save-assessment', async (req, res) => {
     const dimScores = calculateScores(responses, questions);
     const report = generateReport(dimScores, responses, { role: user.role, name: user.name });
 
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(DATA_FILE);
-    const usersSheet = workbook.getWorksheet('Users');
-    const resultsSheet = workbook.getWorksheet('Results');
+    const { workbook, usersSheet, resultsSheet } = await loadWorkbook();
 
-    if (usersSheet) {
-      usersSheet.addRow({
-        id: usersSheet.rowCount,
-        email: user.email,
-        emp_id: user.emp_id,
-        name: user.name,
-        role: user.role,
-        timestamp: report.timestamp,
-        attempt_type: user.attempt_type
-      });
-    }
+    usersSheet.addRow([
+      usersSheet.rowCount,
+      user.email,
+      user.emp_id,
+      user.name,
+      user.role,
+      report.timestamp,
+      user.attempt_type
+    ]);
 
-    resultsSheet.addRow({
-      email: user.email,
-      emp_id: user.emp_id,
-      name: user.name,
-      role: user.role,
-      attempt_type: user.attempt_type,
-      v_score: dimScores.V.level,
-      e_score: dimScores.E.level,
-      c_score: dimScores.C.level,
-      t_score: dimScores.T.level,
-      o_score: dimScores.O.level,
-      r_score: dimScores.R.level,
-      vector_sign: report.vector_sign,
-      vector_class: report.vector_class,
-      timestamp: report.timestamp
-    });
+    resultsSheet.addRow([
+      user.email,
+      user.emp_id,
+      user.name,
+      user.role,
+      user.attempt_type,
+      dimScores.V.level,
+      dimScores.E.level,
+      dimScores.C.level,
+      dimScores.T.level,
+      dimScores.O.level,
+      dimScores.R.level,
+      report.vector_sign,
+      report.vector_class,
+      report.timestamp
+    ]);
 
-    await workbook.xlsx.writeFile(DATA_FILE);
+    await writeWorkbook(workbook);
 
     res.json({ success: true, report });
   } catch (error) {
@@ -197,9 +213,7 @@ app.get('/api/admin/results', async (req, res) => {
 
     jwt.verify(token, ADMIN_SECRET);
 
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(DATA_FILE);
-    const resultsSheet = workbook.getWorksheet('Results');
+    const { resultsSheet } = await loadWorkbook();
 
     const results = [];
     resultsSheet.eachRow((row, rowNumber) => {
@@ -238,9 +252,7 @@ app.get('/api/admin/user/:email', async (req, res) => {
     jwt.verify(token, ADMIN_SECRET);
 
     const { email } = req.params;
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(DATA_FILE);
-    const resultsSheet = workbook.getWorksheet('Results');
+    const { resultsSheet } = await loadWorkbook();
 
     const userAttempts = [];
     resultsSheet.eachRow((row, rowNumber) => {
@@ -278,8 +290,7 @@ app.get('/api/admin/export', async (req, res) => {
 
     jwt.verify(token, ADMIN_SECRET);
 
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(DATA_FILE);
+    const { workbook } = await loadWorkbook();
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=VECTOR-Assessment-Results.xlsx');
@@ -328,7 +339,7 @@ function startServer() {
     }
     console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
     console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
-    console.log(`📁 Score data Excel: ${DATA_FILE}`);
+    console.log(`Score data Excel: ${dataFile()}`);
   });
 }
 

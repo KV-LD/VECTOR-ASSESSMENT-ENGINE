@@ -3,26 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VECTOR Assessment - Human-AI Capability Profile</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>VECTOR Assessment FIX-8 · UST</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--navy:#0B1929;--navy2:#0F2240;--blue:#1A6BAF;--gold:#C9A84C;--gold2:#E8C46A;--cyan:#00C8E8;--white:#FFFFFF;--off:#F7F9FC;--gray:#8A9BB0;--light:#E8EEF4;--text:#1A2B3C;--radius:12px}
+:root{--navy:#006E74;--navy2:#004F54;--blue:#0097AC;--gold:#0097AC;--gold2:#00B3C7;--cyan:#0097AC;--white:#FFFFFF;--off:#EEF6F7;--gray:#6B7375;--light:#D5E8EA;--text:#231F20;--radius:12px}
 html{scroll-behavior:smooth}
-body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+body{font-family:"Source Sans 3",system-ui,sans-serif;background:var(--off);color:var(--text);min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh}
 .screen.active{display:flex;flex-direction:column}
 
-#welcome{background:var(--navy);align-items:center;justify-content:center;padding:40px 24px;position:relative;overflow:hidden}
-#welcome::before{content:"";position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,232,0.07) 0%,transparent 70%);pointer-events:none}
-#welcome::after{content:"";position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.06) 0%,transparent 70%);pointer-events:none}
+#welcome{background:var(--off);align-items:center;justify-content:center;padding:40px 24px;position:relative;overflow:hidden}
+#welcome::before{content:"";position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,151,172,0.14) 0%,transparent 70%);pointer-events:none}
+#welcome::after{content:"";position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,110,116,0.1) 0%,transparent 70%);pointer-events:none}
 .welcome-inner{max-width:600px;width:100%;text-align:center;position:relative;z-index:1}
-.logo-mark{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border:1.5px solid var(--gold);border-radius:16px;margin-bottom:32px;position:relative}
-.logo-mark::before{content:"";position:absolute;inset:-4px;border:0.5px solid rgba(201,168,76,0.2);border-radius:20px}
-.logo-v{font-family:"DM Serif Display",serif;font-size:36px;color:var(--gold);line-height:1}
-.welcome-tag{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:3px;color:var(--cyan);margin-bottom:20px}
-.welcome-title{font-family:"DM Serif Display",serif;font-size:clamp(34px,5vw,52px);line-height:1.1;color:var(--white);margin-bottom:8px}
-.welcome-title span{color:var(--gold)}
+.logo-mark{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border:1.5px solid var(--navy);border-radius:16px;margin-bottom:32px;position:relative}
+.logo-mark::before{content:"";position:absolute;inset:-4px;border:0.5px solid rgba(0,110,116,0.25);border-radius:20px}
+.logo-v{font-family:"Source Serif 4",serif;font-size:36px;color:var(--navy);line-height:1}
+.welcome-tag{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:3px;color:var(--blue);margin-bottom:20px}
+.welcome-title{font-family:"Source Serif 4",serif;font-size:clamp(34px,5vw,52px);line-height:1.1;color:var(--text);margin-bottom:8px}
+.welcome-title span{color:var(--navy)}
 .welcome-sub{font-size:14px;color:var(--gray);line-height:1.7;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
 .welcome-meta{display:flex;gap:32px;justify-content:center;margin-bottom:28px}
 .meta-item{text-align:center}
@@ -30,23 +32,26 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .meta-label{font-size:11px;color:var(--gray);margin-top:2px}
 .form-row{margin-bottom:14px;text-align:left}
 .form-label{font-size:11px;color:var(--gray);margin-bottom:6px;display:block;letter-spacing:0.5px}
-.name-input,.role-select{width:100%;padding:13px 16px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);font-size:14px;font-family:"Inter",sans-serif;color:var(--white);outline:none;transition:border 0.2s}
-.name-input::placeholder{color:rgba(255,255,255,0.25)}
-.name-input:focus,.role-select:focus{border-color:var(--gold)}
-.role-select{background:rgba(15,34,64,0.97);cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A9BB0' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
-.role-select option{background:#0F2240;color:var(--white)}
-.field-error{display:none;font-size:11px;color:#F87171;margin-top:5px}
-.btn-primary{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:var(--navy);font-size:14px;font-weight:600;padding:15px 36px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;margin-top:8px}
-.btn-primary:hover{background:var(--gold2);transform:translateY(-1px)}
+.name-input,.role-select{width:100%;padding:13px 16px;border-radius:8px;border:1.5px solid var(--light);background:var(--white);font-size:14px;font-family:"Source Sans 3",sans-serif;color:var(--text);outline:none;transition:border 0.2s}
+.name-input::placeholder{color:rgba(35,31,32,0.35)}
+.name-input:focus,.role-select:focus{border-color:var(--navy)}
+.role-select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23006E74' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.role-select option{background:var(--white);color:var(--text)}
+.field-error{display:none;font-size:11px;color:#e0604a;margin-top:5px}
+.btn-primary{display:inline-flex;align-items:center;gap:10px;background:var(--navy);color:var(--white);font-size:14px;font-weight:600;padding:15px 36px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;margin-top:8px}
+.btn-primary:hover{background:var(--blue);transform:translateY(-1px)}
 .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.otp-panel{background:var(--white);border:2px solid var(--navy);border-radius:12px;padding:16px;margin:18px 0 8px;text-align:left}
+.otp-digits{font-family:"DM Mono",monospace;font-size:32px;letter-spacing:10px;color:var(--navy);font-weight:700;min-height:40px;line-height:1.2}
+.otp-hint{font-size:13px;color:var(--text);margin-top:8px;line-height:1.5}
 .welcome-dims{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:24px}
-.dim-pill{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1px;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);color:var(--gray)}
-.welcome-copyright{font-size:11px;color:rgba(255,255,255,0.22);margin-top:24px;line-height:1.7;padding:0 20px}
-.welcome-copyright strong{color:rgba(201,168,76,0.5)}
+.dim-pill{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1px;padding:4px 10px;border-radius:20px;border:1px solid var(--light);color:var(--navy);background:var(--white)}
+.welcome-copyright{font-size:11px;color:rgba(35,31,32,0.45);margin-top:24px;line-height:1.7;padding:0 20px}
+.welcome-copyright strong{color:var(--navy)}
 
 #assessment{background:var(--off);color:var(--text)}
 .assess-header{background:var(--navy);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.assess-logo{font-family:"DM Serif Display",serif;font-size:18px;color:var(--gold);letter-spacing:1px}
+.assess-logo{font-family:"Source Serif 4",serif;font-size:18px;color:var(--white);letter-spacing:1px}
 .progress-wrap{display:flex;align-items:center;gap:14px}
 .progress-bar{width:180px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
 .progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.4s ease}
@@ -55,12 +60,12 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .question-card{background:var(--white);border-radius:var(--radius);max-width:760px;width:100%;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08)}
 .q-accent{height:4px;background:var(--gold)}
 .q-num{font-family:"DM Mono",monospace;font-size:11px;color:var(--gray);padding:20px 32px 0}
-.q-text{font-family:"DM Serif Display",serif;font-size:19px;line-height:1.55;color:var(--text);padding:14px 32px 8px}
+.q-text{font-family:"Source Serif 4",serif;font-size:19px;line-height:1.55;color:var(--text);padding:14px 32px 8px}
 .q-instruction{font-size:12px;color:var(--gray);padding:0 32px 20px;font-style:italic}
 .options-wrap{padding:0 24px 8px}
 .opt-item{display:flex;align-items:flex-start;gap:14px;padding:13px 16px;border-radius:8px;cursor:pointer;border:1.5px solid var(--light);margin-bottom:8px;transition:all 0.15s;background:var(--white)}
-.opt-item:hover{border-color:#93C5FD;background:#F0F6FF}
-.opt-item.selected{border-color:var(--navy);background:#EEF2F8}
+.opt-item:hover{border-color:var(--blue);background:#E7F6F8}
+.opt-item.selected{border-color:var(--navy);background:#EEF6F7}
 .opt-badge{width:28px;height:28px;border-radius:6px;background:var(--light);display:flex;align-items:center;justify-content:center;font-family:"DM Mono",monospace;font-size:11px;font-weight:500;color:var(--gray);flex-shrink:0;transition:all 0.15s}
 .opt-item.selected .opt-badge{background:var(--navy);color:var(--white)}
 .opt-text{font-size:13.5px;color:var(--text);line-height:1.57;padding-top:3px;text-transform:none}
@@ -71,10 +76,10 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 #report{background:var(--off);color:var(--text)}
 .report-header{background:var(--navy2);position:relative;overflow:hidden}
-.report-header::before{content:"";position:absolute;top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,232,0.06) 0%,transparent 70%)}
+.report-header::before{content:"";position:absolute;top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,151,172,0.18) 0%,transparent 70%)}
 .report-header-inner{padding:48px 56px 40px;position:relative;z-index:1;display:flex;flex-direction:column;align-items:stretch;gap:8px}
 .report-eyebrow{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:10px}
-.report-name{font-family:"DM Serif Display",serif;font-size:clamp(28px,4.5vw,42px);color:var(--white);margin-bottom:8px}
+.report-name{font-family:"Source Serif 4",serif;font-size:clamp(28px,4.5vw,42px);color:var(--white);margin-bottom:8px}
 .report-role-badge{font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);margin-bottom:6px;letter-spacing:1px}
 .report-calibration{font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:4px;font-style:italic}
 .report-date{font-family:"DM Mono",monospace;font-size:11px;color:var(--gray)}
@@ -83,23 +88,23 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .class-col{flex:0 0 auto;min-width:160px}
 .sig-col{flex:1 1 320px;min-width:240px}
 .class-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:rgba(138,155,176,0.95);margin-bottom:8px}
-.class-display,.sig-display{font-family:"DM Serif Display",serif;font-size:clamp(64px,9vw,92px);color:var(--gold);line-height:0.9;letter-spacing:0}
+.class-display,.sig-display{font-family:"Source Serif 4",serif;font-size:clamp(64px,9vw,92px);color:#7FE0EA;line-height:0.9;letter-spacing:0}
 .class-name{font-size:16px;color:rgba(255,255,255,0.78);margin-top:12px}
 .sig-line{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .sig-interp{font-size:16px;line-height:1.45;color:rgba(255,255,255,0.82);max-width:460px}
 .report-body{max-width:900px;margin:0 auto;padding:48px 32px}
 .r-section{margin-bottom:48px}
-.r-section-title{font-family:"DM Serif Display",serif;font-size:26px;color:var(--navy);margin-bottom:18px}
+.r-section-title{font-family:"Source Serif 4",serif;font-size:26px;color:var(--navy);margin-bottom:18px}
 .r-section-rule{display:none}
 .dim-grid{display:flex;flex-direction:column;gap:16px}
 .dim-row{background:var(--white);border-radius:16px;padding:24px 28px;border:1px solid #E4EAF1}
 .dim-row-top{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px}
-.dim-letter{width:32px;font-family:"DM Serif Display",serif;font-size:26px;color:#C5CDD6;line-height:1;flex-shrink:0;font-style:italic}
+.dim-letter{width:32px;font-family:"Source Serif 4",serif;font-size:26px;color:#9BB8BA;line-height:1;flex-shrink:0;font-style:italic}
 .dim-name-wrap{flex:1}
 .dim-fullname{font-size:16px;font-weight:600;color:var(--navy)}
 .dim-level-name{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1.4px;color:var(--gray);margin-top:4px;text-transform:uppercase}
 .dim-score-num{display:none}
-.dim-level-badge{font-family:"DM Serif Display",serif;font-size:22px;color:var(--navy);flex-shrink:0;white-space:nowrap}
+.dim-level-badge{font-family:"Source Serif 4",serif;font-size:22px;color:var(--navy);flex-shrink:0;white-space:nowrap}
 .dim-interpretation{font-size:14px;color:#4A5568;line-height:1.7}
 .narrative-card{background:var(--white);border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
 .narrative-card p{font-size:14px;line-height:1.8;color:var(--text);margin-bottom:14px}
@@ -110,7 +115,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .sb-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
 .sb-item{font-size:13px;color:#4A5568;line-height:1.6;padding-left:12px;border-left:2px solid var(--light);margin-bottom:8px}
 .dev-card{background:var(--navy);border-radius:10px;padding:32px;color:var(--white)}
-.dev-move{font-family:"DM Serif Display",serif;font-size:22px;color:var(--gold);margin-bottom:8px}
+.dev-move{font-family:"Source Serif 4",serif;font-size:22px;color:#7FE0EA;margin-bottom:8px}
 .dev-desc{font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:24px}
 .dev-practice-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:8px}
 .dev-practice{background:rgba(255,255,255,0.06);border-radius:8px;padding:16px;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.65;border-left:3px solid var(--gold);margin-bottom:16px}
@@ -125,20 +130,20 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .report-copyright{background:var(--white);border-radius:10px;padding:24px 32px;margin:0 auto 32px;max-width:900px;font-size:12px;color:var(--gray);line-height:1.8;border-left:4px solid var(--gold)}
 .report-copyright strong{color:var(--navy)}
 .report-footer{background:var(--navy2);padding:28px 48px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-.footer-logo{font-family:"DM Serif Display",serif;font-size:20px;color:var(--gold)}
+.footer-logo{font-family:"Source Serif 4",serif;font-size:20px;color:var(--white)}
 .footer-actions{display:flex;gap:12px;align-items:center}
-.btn-restart{background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--white);font-size:13px;padding:10px 20px;border-radius:6px;cursor:pointer}
-.btn-print{background:var(--gold);border:none;color:var(--navy);font-size:13px;font-weight:600;padding:10px 20px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.btn-restart{background:transparent;border:1px solid rgba(255,255,255,0.35);color:var(--white);font-size:13px;padding:10px 20px;border-radius:6px;cursor:pointer}
+.btn-print{background:var(--white);border:none;color:var(--navy);font-size:13px;font-weight:600;padding:10px 20px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .footer-meta{font-family:"DM Mono",monospace;font-size:10px;color:var(--gray);letter-spacing:1px;text-align:right}
 @media print{
   body{background:white!important}
   #welcome,#assessment,.report-footer{display:none!important}
   #report{display:flex!important;background:white!important}
-  .report-header{background:#0F2240!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .report-header{background:#006E74!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .report-body{padding:24px!important}
-  .class-display,.sig-display{color:#C9A84C!important}
-  .dim-row,.narrative-card,.sb-card,.report-copyright{box-shadow:none!important;border:1px solid #E8EEF4!important;page-break-inside:avoid}
-  .dev-card{background:#0F2240!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .class-display,.sig-display{color:#0097AC!important}
+  .dim-row,.narrative-card,.sb-card,.report-copyright{box-shadow:none!important;border:1px solid #D5E8EA!important;page-break-inside:avoid}
+  .dev-card{background:#006E74!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 </head>
@@ -146,7 +151,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-7 · 22 Sep 2026 · Excel login + scores · class/sign same font · level labels · Download as PDF</div>
+    <div id="buildStamp" style="background:#006E74;color:#FFFFFF;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-8 · 22 Sep 2026 · UST teal · OTP always visible · no Pre/Post</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -180,16 +185,17 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
         <option value="del">Delivery / Project Management</option>
       </select>
     </div>
-    <div class="form-row" id="otpRow" style="display:none">
-      <label class="form-label">EMAIL CODE</label>
-      <input type="text" id="otpInput" class="name-input" inputmode="numeric" maxlength="6" placeholder="6-digit code" oninput="checkForm()">
-      <div class="form-label" id="otpHint" style="margin-top:8px;color:var(--cyan);"></div>
+    <div class="otp-panel" id="otpRow">
+      <label class="form-label">EMAIL CODE (6 DIGITS)</label>
+      <input type="text" id="otpInput" class="name-input" inputmode="numeric" maxlength="6" placeholder="Enter the 6-digit code" autocomplete="one-time-code" oninput="checkForm()">
+      <div class="otp-digits" id="otpDigits">------</div>
+      <div class="otp-hint" id="otpHint">Complete your details, then send a code. The code appears here in large type when email is not configured.</div>
     </div>
-    <div class="field-error" id="formError">Please complete all fields before starting.</div>
+    <div class="field-error" id="formError">Please complete all fields before starting. There is no Pre/Post assessment dropdown in this version.</div>
     <button class="btn-primary" id="otpBtn" type="button" onclick="requestOtp()" disabled>
       Send email code
     </button>
-    <button class="btn-primary" id="startBtn" type="button" onclick="startAssessment()" disabled style="display:none;margin-left:0">
+    <button class="btn-primary" id="startBtn" type="button" onclick="startAssessment()" disabled>
       Verify and begin
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
@@ -262,7 +268,11 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <script>
 const API = '';
-const BUILD = 'FIX-7';
+const BUILD = 'FIX-8';
+if (typeof location !== 'undefined' && location.protocol === 'file:') {
+  const stamp = document.getElementById('buildStamp');
+  if (stamp) stamp.textContent = 'STOP: run npm start and open http://localhost:3000/VECTORASSESSMENTENGINE. Do not open this HTML file from disk.';
+}
 const QB={
 eng:[
 {id:"V1",dim:"V",type:"sit",text:"Your product manager sends a ticket: 'Improve user retention.' The codebase and data are available. Before engaging AI you:",opts:[{l:"A",t:"Start building immediately - the requirement is clear enough to begin.",s:1},{l:"B",t:"Clarify with the PM which user segment or metric defines retention.",s:2},{l:"C",t:"Write a one-paragraph problem statement defining what retention means in this product context, which technical intervention is most likely to move it, and what success looks like - before writing a single prompt.",s:4},{l:"D",t:"Ask the PM to provide a full technical specification before you engage.",s:1}]},
@@ -440,12 +450,12 @@ const DIM_NAMES = {
   R: 'Range'
 };
 const DIM_COLORS = {
-  V: '#1A6BAF',
-  E: '#C9A84C',
-  C: '#0D6E6E',
-  T: '#6B4FAF',
-  O: '#2E75B6',
-  R: '#2D7D5A'
+  V: '#006E74',
+  E: '#0097AC',
+  C: '#0a9b72',
+  T: '#004F54',
+  O: '#0097AC',
+  R: '#231F20'
 };
 const CLASSES = {
   V1: { name: 'Executor', desc: 'You use AI. AI does not yet fully use you.' },
@@ -755,8 +765,7 @@ function profileReady(){
     && document.getElementById('roleSelect').value;
 }
 function checkForm(){
-  const otpReady = document.getElementById('otpRow').style.display !== 'none'
-    && document.getElementById('otpInput').value.trim().length === 6;
+  const otpReady = document.getElementById('otpInput').value.trim().length === 6;
   document.getElementById('otpBtn').disabled = !profileReady();
   document.getElementById('startBtn').disabled = !profileReady() || !otpReady;
 }
@@ -784,12 +793,14 @@ async function requestOtp(){
     });
     const data=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(data.error || 'Could not send code');
-    document.getElementById('otpRow').style.display='block';
-    document.getElementById('startBtn').style.display='inline-flex';
     const hint = data.devOtp
-      ? (data.message + ' Code: ' + data.devOtp)
+      ? (data.message + ' Your code is shown below.')
       : (data.message || 'Enter the code sent to your email.');
     document.getElementById('otpHint').textContent=hint;
+    document.getElementById('otpDigits').textContent = data.devOtp || '------';
+    if(data.devOtp){
+      document.getElementById('otpInput').value = data.devOtp;
+    }
     document.getElementById('otpInput').focus();
   }catch(err){
     document.getElementById('formError').textContent=err.message;
@@ -820,7 +831,7 @@ async function startAssessment(){
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-7.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-8.');
     return;
   }
   QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));
@@ -872,9 +883,8 @@ function restart(){
   currentQ=0;answers={};QUESTIONS=[];
   ['nameInput','emailInput','empInput','otpInput'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('roleSelect').value='';
-  document.getElementById('otpRow').style.display='none';
-  document.getElementById('otpHint').textContent='';
-  document.getElementById('startBtn').style.display='none';
+  document.getElementById('otpHint').textContent='Complete your details, then send a code. The code appears here in large type when email is not configured.';
+  document.getElementById('otpDigits').textContent='------';
   document.getElementById('otpBtn').disabled=true;
   document.getElementById('startBtn').disabled=true;
   localStorage.removeItem('token');

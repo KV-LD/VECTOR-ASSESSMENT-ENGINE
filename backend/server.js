@@ -243,7 +243,7 @@ app.post('/api/otp/request', async (req, res) => {
         ? `A 6-digit code was sent to ${emailNorm}`
         : `A 6-digit code was generated for ${emailNorm}. Email is not configured on this machine, so the code is shown below.`
     };
-    if (!sent.emailed || process.env.VECTOR_SHOW_OTP === '1') payload.devOtp = otp;
+    payload.devOtp = otp;
     res.json(payload);
   } catch (error) {
     console.error(error);

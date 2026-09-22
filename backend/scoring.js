@@ -12,12 +12,12 @@ const DIM_NAMES = {
   R: 'Range'
 };
 const DIM_COLORS = {
-  V: '#1A6BAF',
-  E: '#C9A84C',
-  C: '#0D6E6E',
-  T: '#6B4FAF',
-  O: '#2E75B6',
-  R: '#2D7D5A'
+  V: '#006E74',
+  E: '#0097AC',
+  C: '#0a9b72',
+  T: '#004F54',
+  O: '#0097AC',
+  R: '#231F20'
 };
 const CLASSES = {
   V1: { name: 'Executor', desc: 'You use AI. AI does not yet fully use you.' },

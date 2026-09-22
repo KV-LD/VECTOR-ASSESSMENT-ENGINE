@@ -239,12 +239,12 @@
         <div class="stat-value" id="stat-users">0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Pre-Program</div>
-        <div class="stat-value" id="stat-pre">0</div>
+        <div class="stat-label">Repeat Attempts</div>
+        <div class="stat-value" id="stat-repeats">0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Post-Program</div>
-        <div class="stat-value" id="stat-post">0</div>
+        <div class="stat-label">Latest Attempt No.</div>
+        <div class="stat-value" id="stat-latest">0</div>
       </div>
     </div>
 
@@ -255,6 +255,7 @@
             <th>Email</th>
             <th>Name</th>
             <th>Role</th>
+            <th>Attempt</th>
             <th>Vector Sign</th>
             <th>Class</th>
             <th>Timestamp</th>
@@ -328,10 +329,10 @@ function updateStats() {
   const uniqueUsers = new Set(allResults.map(r => r.email)).size;
   document.getElementById('stat-users').textContent = uniqueUsers;
 
-  const preCount = allResults.filter(r => r.attempt_type === 'Pre-Program').length;
-  const postCount = allResults.filter(r => r.attempt_type === 'Post-Program').length;
-  document.getElementById('stat-pre').textContent = preCount;
-  document.getElementById('stat-post').textContent = postCount;
+  const repeats = allResults.filter(r => Number(r.attempt_type) > 1).length;
+  const latest = allResults.reduce((max, r) => Math.max(max, Number(r.attempt_type) || 0), 0);
+  document.getElementById('stat-repeats').textContent = repeats;
+  document.getElementById('stat-latest').textContent = latest;
 }
 
 function displayResults(results) {
@@ -347,6 +348,7 @@ function displayResults(results) {
       <td>${r.email}</td>
       <td>${r.name}</td>
       <td>${r.role}</td>
+      <td>${r.attempt_type || ''}</td>
       <td><span class="vector-sign">${r.vector_sign}</span></td>
       <td>${r.vector_class}</td>
       <td>${new Date(r.timestamp).toLocaleString()}</td>

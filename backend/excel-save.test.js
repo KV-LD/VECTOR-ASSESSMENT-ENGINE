@@ -51,6 +51,7 @@ describe('Excel assessment save', () => {
   afterAll((done) => {
     server.close(() => {
       try { fs.unlinkSync(process.env.VECTOR_DATA_FILE); } catch (e) { /* ignore */ }
+      try { fs.unlinkSync(process.env.VECTOR_DATA_FILE.replace(/\.xlsx$/i, '.jsonl')); } catch (e) { /* ignore */ }
       done();
     });
   });
@@ -91,6 +92,21 @@ describe('Excel assessment save', () => {
     expect(results.rowCount).toBeGreaterThan(1);
     expect(results.getRow(2).getCell(1).value).toBe('save-test@example.com');
     expect(results.getRow(2).getCell(3).value).toBe('Save Test');
+    expect(results.getRow(2).getCell(5).value).toBe(1);
+    expect(results.getRow(2).getCell(6).value).toBe(5);
+    expect(results.getRow(2).getCell(15).value).toBe('Defining');
     expect(String(results.getRow(2).getCell(12).value || '')).toMatch(/^V[1-5]-[VECTOR]$/);
+
+    const users = workbook.getWorksheet('Users');
+    expect(users.rowCount).toBeGreaterThan(1);
+    expect(users.getRow(2).getCell(2).value).toBe('save-test@example.com');
+    expect(users.getRow(2).getCell(4).value).toBe('Save Test');
+    expect(users.getRow(2).getCell(7).value).toBe(1);
+
+    const jsonlPath = process.env.VECTOR_DATA_FILE.replace(/\.xlsx$/i, '.jsonl');
+    const jsonl = fs.readFileSync(jsonlPath, 'utf8');
+    expect(jsonl).toContain('"type":"login"');
+    expect(jsonl).toContain('"type":"result"');
+    expect(jsonl).toContain('save-test@example.com');
   });
 });

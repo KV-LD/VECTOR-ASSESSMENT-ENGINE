@@ -78,11 +78,15 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .report-role-badge{font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);margin-bottom:6px;letter-spacing:1px}
 .report-calibration{font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:4px;font-style:italic}
 .report-date{font-family:"DM Mono",monospace;font-size:11px;color:var(--gray)}
-.report-class-block{text-align:center;margin-top:28px}
-.class-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:rgba(138,155,176,0.95);text-align:center;margin-bottom:8px}
-.class-display{font-family:"DM Serif Display",serif;font-size:clamp(64px,9vw,92px);color:var(--gold);line-height:0.9;text-align:center}
-.class-name{font-size:16px;color:rgba(255,255,255,0.78);margin-top:12px;text-align:center}
-.sig-display{font-family:"DM Mono",monospace;font-size:13px;color:var(--cyan);margin-top:10px;letter-spacing:2px;text-align:center}
+.report-class-block{margin-top:28px}
+.class-sign-row{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap}
+.class-col{flex:0 0 auto;min-width:160px}
+.sig-col{flex:1 1 320px;min-width:240px}
+.class-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:3px;color:rgba(138,155,176,0.95);margin-bottom:8px}
+.class-display,.sig-display{font-family:"DM Serif Display",serif;font-size:clamp(64px,9vw,92px);color:var(--gold);line-height:0.9;letter-spacing:0}
+.class-name{font-size:16px;color:rgba(255,255,255,0.78);margin-top:12px}
+.sig-line{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.sig-interp{font-size:16px;line-height:1.45;color:rgba(255,255,255,0.82);max-width:460px}
 .report-body{max-width:900px;margin:0 auto;padding:48px 32px}
 .r-section{margin-bottom:48px}
 .r-section-title{font-family:"DM Serif Display",serif;font-size:26px;color:var(--navy);margin-bottom:18px}
@@ -94,7 +98,8 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 .dim-name-wrap{flex:1}
 .dim-fullname{font-size:16px;font-weight:600;color:var(--navy)}
 .dim-level-name{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1.4px;color:var(--gray);margin-top:4px;text-transform:uppercase}
-.dim-score-num{font-family:"DM Serif Display",serif;font-size:22px;color:var(--navy);flex-shrink:0}
+.dim-score-num{display:none}
+.dim-level-badge{font-family:"DM Serif Display",serif;font-size:22px;color:var(--navy);flex-shrink:0;white-space:nowrap}
 .dim-interpretation{font-size:14px;color:#4A5568;line-height:1.7}
 .narrative-card{background:var(--white);border-radius:10px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
 .narrative-card p{font-size:14px;line-height:1.8;color:var(--text);margin-bottom:14px}
@@ -131,7 +136,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
   #report{display:flex!important;background:white!important}
   .report-header{background:#0F2240!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .report-body{padding:24px!important}
-  .class-display{color:#C9A84C!important}
+  .class-display,.sig-display{color:#C9A84C!important}
   .dim-row,.narrative-card,.sb-card,.report-copyright{box-shadow:none!important;border:1px solid #E8EEF4!important;page-break-inside:avoid}
   .dev-card{background:#0F2240!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -141,7 +146,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-6 · 22 Sep 2026 · Email OTP login · one PDF download · per-dimension scoring</div>
+    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-7 · 22 Sep 2026 · Excel login + scores · class/sign same font · level labels · Download as PDF</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -222,10 +227,20 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
         <div class="report-date" id="rDate"></div>
       </div>
       <div class="report-class-block">
-        <div class="class-label">VECTOR CLASS</div>
-        <div class="class-display" id="rClass"></div>
-        <div class="class-name" id="rClassName"></div>
-        <div class="sig-display" id="rSig"></div>
+        <div class="class-sign-row">
+          <div class="class-col">
+            <div class="class-label">VECTOR CLASS</div>
+            <div class="class-display" id="rClass"></div>
+            <div class="class-name" id="rClassName"></div>
+          </div>
+          <div class="sig-col">
+            <div class="class-label">VECTOR SIGN</div>
+            <div class="sig-line">
+              <div class="sig-display" id="rSig"></div>
+              <div class="sig-interp" id="rSigInterp"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -239,7 +254,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
     <div class="footer-logo">VECTOR</div>
     <div class="footer-actions">
       <button class="btn-restart" onclick="restart()">Retake Assessment</button>
-      <button class="btn-print" type="button" id="downloadReportBtn">Download PDF</button>
+      <button class="btn-print" type="button" id="downloadReportBtn">Download as PDF</button>
     </div>
     <div class="footer-meta">VECTOR &copy; Krishnan Nilakantan (NK)<br>Confidential Assessment Report</div>
   </div>
@@ -247,7 +262,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <script>
 const API = '';
-const BUILD = 'FIX-6';
+const BUILD = 'FIX-7';
 const QB={
 eng:[
 {id:"V1",dim:"V",type:"sit",text:"Your product manager sends a ticket: 'Improve user retention.' The codebase and data are available. Before engaging AI you:",opts:[{l:"A",t:"Start building immediately - the requirement is clear enough to begin.",s:1},{l:"B",t:"Clarify with the PM which user segment or metric defines retention.",s:2},{l:"C",t:"Write a one-paragraph problem statement defining what retention means in this product context, which technical intervention is most likely to move it, and what success looks like - before writing a single prompt.",s:4},{l:"D",t:"Ask the PM to provide a full technical specification before you engage.",s:1}]},
@@ -805,7 +820,7 @@ async function startAssessment(){
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-6.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-7.');
     return;
   }
   QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));
@@ -872,14 +887,19 @@ async function submitAssessment(){
   try{
     let token=localStorage.getItem('token');
     if(!token) throw new Error('Session expired. Return to the start screen and verify your email code again.');
+    const responses={};
+    Object.keys(answers).forEach(function(k){ if(k.indexOf('_')!==0) responses[k]=answers[k]; });
     const saveRes=await fetch((API||'')+'/api/save-assessment',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({responses:answers})
+      body:JSON.stringify({responses:responses,userData:userData})
     });
+    const saveData=await saveRes.json().catch(()=>({}));
     if(!saveRes.ok){
-      const err=await saveRes.json().catch(()=>({}));
-      throw new Error(err.error || ('Save failed ('+saveRes.status+')'));
+      throw new Error(saveData.error || ('Save failed ('+saveRes.status+')'));
+    }
+    if(saveData.warning){
+      alert(saveData.warning);
     }
   }catch(err){
     console.error('Excel save failed', err);
@@ -904,10 +924,11 @@ function renderReport(r){
   document.getElementById('rCalibration').textContent='Assessment calibrated for '+(r.role_label||userData.role)+' professionals';
   document.getElementById('rDate').textContent='Assessment completed: '+ds;
   document.getElementById('rClass').textContent=cls;
-  document.getElementById('rClassName').textContent=r.signature_subtitle || ((r.class_name||'')+' · '+(DIM_NAMES[r.dominant]||'')+' — '+(r.class_desc||''));
-  document.getElementById('rSig').textContent='Vector Signature: '+sign;
+  document.getElementById('rClassName').textContent=r.class_name || '';
+  document.getElementById('rSig').textContent=sign;
+  document.getElementById('rSigInterp').textContent=r.signature_subtitle || ((r.class_name||'')+' · '+(DIM_NAMES[r.dominant]||'')+' — '+(r.class_desc||''));
   const dimRows=(r.dimensions||[]).map(d=>{
-    return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter">${escapeHtml(d.dim)}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml(d.level_name||'')}</div></div><div class="dim-score-num">${d.level}/5</div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
+    return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter">${escapeHtml(d.dim)}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml(d.level_name||'')}</div></div><div class="dim-level-badge">${escapeHtml(d.level_name||'')}</div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
   }).join('');
   const scaleNodes=['V1','V2','V3','V4','V5'].map(v=>{
     const active=v===r.vector_class;
@@ -1031,7 +1052,7 @@ function downloadReport(ev){
   const pdfName = reportBaseName() + '.pdf';
   const finish = function(){
     window.__vectorDownloading = false;
-    if (btn) { btn.disabled = false; btn.textContent = 'Download PDF'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Download as PDF'; }
   };
   const run = (window.html2pdf)
     ? downloadPdf(pdfName)

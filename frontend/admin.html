@@ -380,10 +380,10 @@ async function viewUserAttempts(email) {
     data.attempts.forEach((att, idx) => {
       html += `
         <div style="margin: 20px 0; padding: 15px; background: var(--ust-off); border-radius: 8px;">
-          <strong>Attempt ${idx + 1}</strong><br>
+          <strong>Attempt ${att.attempt_type || (idx + 1)}</strong><br>
           <strong>Vector Sign:</strong> ${att.vector_sign}<br>
           <strong>Class:</strong> ${att.vector_class}<br>
-          <strong>Scores:</strong> V:${att.scores.V} E:${att.scores.E} C:${att.scores.C} T:${att.scores.T} O:${att.scores.O} R:${att.scores.R}<br>
+          <strong>Level:</strong> V:${att.scores.V} E:${att.scores.E} C:${att.scores.C} T:${att.scores.T} O:${att.scores.O} R:${att.scores.R}<br>
           <strong>Date:</strong> ${new Date(att.timestamp).toLocaleString()}
         </div>
       `;

@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const questionsByRole = require('./questions');
-const { calculateScores, generateReport, cleanDisplayText } = require('./scoring');
+const { calculateScores, generateReport, cleanDisplayText, DIM_LEVELS } = require('./scoring');
 
 const app = express();
 const PORT = 3000;
@@ -16,6 +16,63 @@ const ADMIN_SECRET = 'admin-secret-key-change-in-production';
 function dataFile() {
   return process.env.VECTOR_DATA_FILE || path.join(__dirname, '../data/assessments.xlsx');
 }
+function jsonlFile() {
+  return process.env.VECTOR_JSONL_FILE || dataFile().replace(/\.xlsx$/i, '.jsonl');
+}
+function levelName(level) {
+  return DIM_LEVELS[level] || String(level || '');
+}
+function bindColumns(sheet, columns) {
+  columns.forEach((col, i) => {
+    const column = sheet.getColumn(i + 1);
+    column.key = col.key;
+    column.width = col.width;
+    const headerCell = sheet.getRow(1).getCell(i + 1);
+    if (!headerCell.value) headerCell.value = col.header;
+  });
+}
+function nextRowNumber(sheet) {
+  let max = 1;
+  sheet.eachRow({ includeEmpty: false }, (row, n) => {
+    if (n > max) max = n;
+  });
+  return max + 1;
+}
+function appendValues(sheet, values) {
+  const row = sheet.getRow(nextRowNumber(sheet));
+  values.forEach((value, i) => {
+    row.getCell(i + 1).value = value == null ? '' : value;
+  });
+  row.commit();
+  return row.number;
+}
+function countEmailRows(sheet, emailCol, email) {
+  const needle = String(email || '').trim().toLowerCase();
+  let n = 0;
+  sheet.eachRow((row, i) => {
+    if (i === 1) return;
+    if (String(row.getCell(emailCol).value || '').trim().toLowerCase() === needle) n += 1;
+  });
+  return n;
+}
+function appendJsonl(record) {
+  try {
+    const file = jsonlFile();
+    const dir = path.dirname(file);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(file, JSON.stringify(record) + '\n');
+  } catch (error) {
+    console.error('JSONL backup failed', error);
+  }
+}
+function cleanResponses(responses) {
+  const out = {};
+  Object.keys(responses || {}).forEach((key) => {
+    if (key.startsWith('_')) return;
+    out[key] = responses[key];
+  });
+  return out;
+}
 const USER_COLUMNS = [
   { header: 'ID', key: 'id', width: 5 },
   { header: 'Email', key: 'email', width: 25 },
@@ -23,7 +80,7 @@ const USER_COLUMNS = [
   { header: 'Name', key: 'name', width: 25 },
   { header: 'Role', key: 'role', width: 15 },
   { header: 'Timestamp', key: 'timestamp', width: 20 },
-  { header: 'Attempt Type', key: 'attempt_type', width: 15 }
+  { header: 'Attempt', key: 'attempt_type', width: 15 }
 ];
 const RESULT_COLUMNS = [
   { header: 'User Email', key: 'email', width: 25 },
@@ -39,7 +96,13 @@ const RESULT_COLUMNS = [
   { header: 'R Score', key: 'r_score', width: 10 },
   { header: 'Vector Sign', key: 'vector_sign', width: 15 },
   { header: 'Vector Class', key: 'vector_class', width: 15 },
-  { header: 'Timestamp', key: 'timestamp', width: 20 }
+  { header: 'Timestamp', key: 'timestamp', width: 20 },
+  { header: 'V Level', key: 'v_level', width: 14 },
+  { header: 'E Level', key: 'e_level', width: 14 },
+  { header: 'C Level', key: 'c_level', width: 14 },
+  { header: 'T Level', key: 't_level', width: 14 },
+  { header: 'O Level', key: 'o_level', width: 14 },
+  { header: 'R Level', key: 'r_level', width: 14 }
 ];
 const ADMIN_USER = 'admin@ust.com';
 const ADMIN_PASS = bcrypt.hashSync('admin123', 10); // Change in production
@@ -74,8 +137,10 @@ async function initializeExcel() {
   }
   if (!fs.existsSync(file)) {
     const workbook = new ExcelJS.Workbook();
-    workbook.addWorksheet('Users').columns = USER_COLUMNS;
-    workbook.addWorksheet('Results').columns = RESULT_COLUMNS;
+    const users = workbook.addWorksheet('Users');
+    const results = workbook.addWorksheet('Results');
+    bindColumns(users, USER_COLUMNS);
+    bindColumns(results, RESULT_COLUMNS);
     await workbook.xlsx.writeFile(file);
     console.log(`Excel file initialized at ${file}`);
   }
@@ -87,20 +152,32 @@ async function loadWorkbook() {
   await workbook.xlsx.readFile(dataFile());
   const usersSheet = workbook.getWorksheet('Users') || workbook.addWorksheet('Users');
   const resultsSheet = workbook.getWorksheet('Results') || workbook.addWorksheet('Results');
-  if (usersSheet.rowCount === 0) usersSheet.columns = USER_COLUMNS;
-  if (resultsSheet.rowCount === 0) resultsSheet.columns = RESULT_COLUMNS;
+  bindColumns(usersSheet, USER_COLUMNS);
+  bindColumns(resultsSheet, RESULT_COLUMNS);
   return { workbook, usersSheet, resultsSheet };
 }
 
 async function writeWorkbook(workbook) {
+  const file = dataFile();
   try {
-    await workbook.xlsx.writeFile(dataFile());
+    await workbook.xlsx.writeFile(file);
+    return { file, warning: null };
   } catch (error) {
     const locked = error && (error.code === 'EBUSY' || error.code === 'EPERM' || /busy|locked|permission/i.test(String(error.message)));
-    if (locked) {
-      throw new Error('Excel file is open in another program. Close data\\assessments.xlsx and complete the assessment again.');
+    const fallback = file.replace(/\.xlsx$/i, `-${Date.now()}.xlsx`);
+    try {
+      await workbook.xlsx.writeFile(fallback);
+      const warning = locked
+        ? `Main Excel file is open. Saved a copy at ${fallback}. Close Excel so future attempts write to assessments.xlsx.`
+        : `Could not update ${file}. Saved a copy at ${fallback}.`;
+      console.error(warning);
+      return { file: fallback, warning };
+    } catch (fallbackError) {
+      if (locked) {
+        throw new Error('Excel file is open in another program. Close data\\assessments.xlsx and complete the assessment again.');
+      }
+      throw fallbackError;
     }
-    throw error;
   }
 }
 
@@ -174,24 +251,68 @@ app.post('/api/otp/request', async (req, res) => {
   }
 });
 
-app.post('/api/otp/verify', (req, res) => {
-  const { email, otp } = req.body || {};
-  const emailNorm = String(email || '').trim().toLowerCase();
-  const rec = otpStore.get(emailNorm);
-  if (!rec || rec.expires < Date.now()) {
-    return res.status(401).json({ error: 'Code expired. Request a new one.' });
-  }
-  rec.attempts += 1;
-  if (rec.attempts > 5) {
+app.post('/api/otp/verify', async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    const emailNorm = String(email || '').trim().toLowerCase();
+    const rec = otpStore.get(emailNorm);
+    if (!rec || rec.expires < Date.now()) {
+      return res.status(401).json({ error: 'Code expired. Request a new one.' });
+    }
+    rec.attempts += 1;
+    if (rec.attempts > 5) {
+      otpStore.delete(emailNorm);
+      return res.status(401).json({ error: 'Too many attempts. Request a new code.' });
+    }
+    if (rec.hash !== hashOtp(String(otp || '').trim())) {
+      return res.status(401).json({ error: 'Invalid code' });
+    }
     otpStore.delete(emailNorm);
-    return res.status(401).json({ error: 'Too many attempts. Request a new code.' });
+    const timestamp = new Date().toISOString();
+    const token = jwt.sign({ ...rec.profile, timestamp }, SECRET, { expiresIn: '12h' });
+
+    let loginAttempt = 1;
+    let saveWarning = null;
+    try {
+      const { workbook, usersSheet } = await loadWorkbook();
+      loginAttempt = countEmailRows(usersSheet, 2, rec.profile.email) + 1;
+      appendValues(usersSheet, [
+        nextRowNumber(usersSheet) - 1,
+        rec.profile.email,
+        rec.profile.emp_id,
+        rec.profile.name,
+        rec.profile.role,
+        timestamp,
+        loginAttempt
+      ]);
+      const written = await writeWorkbook(workbook);
+      saveWarning = written.warning;
+      console.log(`Login stored for ${rec.profile.email} attempt ${loginAttempt} -> ${written.file}`);
+    } catch (excelError) {
+      console.error('Login Excel write failed', excelError);
+      saveWarning = excelError.message;
+    }
+    appendJsonl({
+      type: 'login',
+      email: rec.profile.email,
+      emp_id: rec.profile.emp_id,
+      name: rec.profile.name,
+      role: rec.profile.role,
+      timestamp,
+      attempt: loginAttempt
+    });
+
+    res.json({
+      token,
+      ...rec.profile,
+      attempt: loginAttempt,
+      warning: saveWarning,
+      message: 'Login successful'
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message || 'Login failed' });
   }
-  if (rec.hash !== hashOtp(String(otp || '').trim())) {
-    return res.status(401).json({ error: 'Invalid code' });
-  }
-  otpStore.delete(emailNorm);
-  const token = jwt.sign({ ...rec.profile, timestamp: new Date().toISOString() }, SECRET, { expiresIn: '12h' });
-  res.json({ token, ...rec.profile, message: 'Login successful' });
 });
 
 function cleanText(value) {
@@ -226,33 +347,43 @@ app.post('/api/save-assessment', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     const user = jwt.verify(token, SECRET);
-    const { responses } = req.body;
-    const questions = questionsByRole[user.role];
+    const bodyUser = (req.body && req.body.userData) || {};
+    const profile = {
+      email: String(user.email || bodyUser.email || '').trim().toLowerCase(),
+      emp_id: String(user.emp_id || bodyUser.emp_id || '').trim(),
+      name: String(user.name || bodyUser.name || '').trim(),
+      role: String(user.role || bodyUser.role || '').trim()
+    };
+    const responses = cleanResponses(req.body && req.body.responses);
+    const questions = questionsByRole[profile.role];
     if (!questions) {
       return res.status(400).json({ error: 'Unknown role' });
     }
 
     const dimScores = calculateScores(responses, questions);
-    const report = generateReport(dimScores, responses, { role: user.role, name: user.name });
+    const report = generateReport(dimScores, responses, { role: profile.role, name: profile.name });
 
     const { workbook, usersSheet, resultsSheet } = await loadWorkbook();
+    const attempt = countEmailRows(resultsSheet, 1, profile.email) + 1;
 
-    usersSheet.addRow([
-      usersSheet.rowCount,
-      user.email,
-      user.emp_id,
-      user.name,
-      user.role,
-      report.timestamp,
-      ''
-    ]);
+    if (countEmailRows(usersSheet, 2, profile.email) === 0) {
+      appendValues(usersSheet, [
+        nextRowNumber(usersSheet) - 1,
+        profile.email,
+        profile.emp_id,
+        profile.name,
+        profile.role,
+        report.timestamp,
+        1
+      ]);
+    }
 
-    resultsSheet.addRow([
-      user.email,
-      user.emp_id,
-      user.name,
-      user.role,
-      '',
+    appendValues(resultsSheet, [
+      profile.email,
+      profile.emp_id,
+      profile.name,
+      profile.role,
+      attempt,
       dimScores.V.level,
       dimScores.E.level,
       dimScores.C.level,
@@ -261,12 +392,52 @@ app.post('/api/save-assessment', async (req, res) => {
       dimScores.R.level,
       report.vector_sign,
       report.vector_class,
-      report.timestamp
+      report.timestamp,
+      levelName(dimScores.V.level),
+      levelName(dimScores.E.level),
+      levelName(dimScores.C.level),
+      levelName(dimScores.T.level),
+      levelName(dimScores.O.level),
+      levelName(dimScores.R.level)
     ]);
 
-    await writeWorkbook(workbook);
+    const written = await writeWorkbook(workbook);
+    appendJsonl({
+      type: 'result',
+      email: profile.email,
+      emp_id: profile.emp_id,
+      name: profile.name,
+      role: profile.role,
+      attempt,
+      scores: {
+        V: dimScores.V.level,
+        E: dimScores.E.level,
+        C: dimScores.C.level,
+        T: dimScores.T.level,
+        O: dimScores.O.level,
+        R: dimScores.R.level
+      },
+      levels: {
+        V: levelName(dimScores.V.level),
+        E: levelName(dimScores.E.level),
+        C: levelName(dimScores.C.level),
+        T: levelName(dimScores.T.level),
+        O: levelName(dimScores.O.level),
+        R: levelName(dimScores.R.level)
+      },
+      vector_sign: report.vector_sign,
+      vector_class: report.vector_class,
+      timestamp: report.timestamp
+    });
+    console.log(`Assessment stored for ${profile.email} attempt ${attempt} -> ${written.file}`);
 
-    res.json({ success: true, report });
+    res.json({
+      success: true,
+      report,
+      attempt,
+      savedTo: written.file,
+      warning: written.warning
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -420,6 +591,7 @@ function startServer() {
     console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
     console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
     console.log(`Score data Excel: ${dataFile()}`);
+    console.log(`Login/score backup: ${jsonlFile()}`);
   });
 }
 

@@ -56,15 +56,20 @@ describe('Excel assessment save', () => {
   });
 
   test('writes a Results row after a completed assessment', async () => {
-    const login = await postJson(port, '/api/login', {
+    const login = await postJson(port, '/api/otp/request', {
       email: 'save-test@example.com',
       emp_id: 'EMP-1',
       name: 'Save Test',
-      role: 'hr',
-      attempt_type: 'Pre-Program'
+      role: 'hr'
     });
     expect(login.status).toBe(200);
-    expect(login.json.token).toBeTruthy();
+    expect(login.json.devOtp).toBeTruthy();
+    const verified = await postJson(port, '/api/otp/verify', {
+      email: 'save-test@example.com',
+      otp: login.json.devOtp
+    });
+    expect(verified.status).toBe(200);
+    expect(verified.json.token).toBeTruthy();
 
     const responses = {};
     ['V', 'E', 'C'].forEach((d) => {
@@ -75,7 +80,7 @@ describe('Excel assessment save', () => {
     });
 
     const saved = await postJson(port, '/api/save-assessment', { responses }, {
-      Authorization: 'Bearer ' + login.json.token
+      Authorization: 'Bearer ' + verified.json.token
     });
     expect(saved.status).toBe(200);
     expect(saved.json.success).toBe(true);

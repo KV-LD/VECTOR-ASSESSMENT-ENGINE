@@ -224,14 +224,6 @@
         </select>
       </div>
       <div class="filter-group">
-        <label>Attempt Type</label>
-        <select id="filter-attempt" onchange="filterResults()">
-          <option value="">All Attempts</option>
-          <option value="Pre-Program">Pre-Program</option>
-          <option value="Post-Program">Post-Program</option>
-        </select>
-      </div>
-      <div class="filter-group">
         <label>Search Email</label>
         <input type="email" id="search-email" placeholder="Search..." onkeyup="filterResults()">
       </div>
@@ -263,7 +255,6 @@
             <th>Email</th>
             <th>Name</th>
             <th>Role</th>
-            <th>Attempt</th>
             <th>Vector Sign</th>
             <th>Class</th>
             <th>Timestamp</th>
@@ -356,7 +347,6 @@ function displayResults(results) {
       <td>${r.email}</td>
       <td>${r.name}</td>
       <td>${r.role}</td>
-      <td><span class="badge ${r.attempt_type === 'Pre-Program' ? 'badge-pre' : 'badge-post'}">${r.attempt_type}</span></td>
       <td><span class="vector-sign">${r.vector_sign}</span></td>
       <td>${r.vector_class}</td>
       <td>${new Date(r.timestamp).toLocaleString()}</td>
@@ -367,14 +357,12 @@ function displayResults(results) {
 
 function filterResults() {
   const role = document.getElementById('filter-role').value;
-  const attempt = document.getElementById('filter-attempt').value;
   const email = document.getElementById('search-email').value.toLowerCase();
 
   let filtered = allResults.filter(r => {
     const matchRole = !role || r.role === role;
-    const matchAttempt = !attempt || r.attempt_type === attempt;
     const matchEmail = !email || r.email.toLowerCase().includes(email);
-    return matchRole && matchAttempt && matchEmail;
+    return matchRole && matchEmail;
   });
 
   displayResults(filtered);
@@ -392,7 +380,7 @@ async function viewUserAttempts(email) {
     data.attempts.forEach((att, idx) => {
       html += `
         <div style="margin: 20px 0; padding: 15px; background: var(--ust-off); border-radius: 8px;">
-          <strong>Attempt ${idx + 1}</strong> (${att.attempt_type})<br>
+          <strong>Attempt ${idx + 1}</strong><br>
           <strong>Vector Sign:</strong> ${att.vector_sign}<br>
           <strong>Class:</strong> ${att.vector_class}<br>
           <strong>Scores:</strong> V:${att.scores.V} E:${att.scores.E} C:${att.scores.C} T:${att.scores.T} O:${att.scores.O} R:${att.scores.R}<br>

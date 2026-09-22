@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const ExcelJS = require('exceljs');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const questionsByRole = require('./questions');
 const { calculateScores, generateReport, cleanDisplayText } = require('./scoring');
 
@@ -103,15 +105,93 @@ async function writeWorkbook(workbook) {
 }
 
 // Login endpoint
-app.post('/api/login', (req, res) => {
-  const { email, emp_id, name, role, attempt_type } = req.body;
+const otpStore = new Map();
 
-  if (!email || !emp_id || !name || !role || !attempt_type) {
-    return res.status(400).json({ error: 'Missing required fields' });
+function hashOtp(otp) {
+  return crypto.createHash('sha256').update(String(otp)).digest('hex');
+}
+
+function smtpConfigured() {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+async function sendOtpEmail(to, otp, name) {
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'vector@localhost';
+  const text = `Hello ${name || ''},\n\nYour VECTOR assessment code is ${otp}.\nIt expires in 10 minutes.\n\nIf you did not request this, ignore this email.`;
+  if (!smtpConfigured()) {
+    console.log(`OTP for ${to}: ${otp}`);
+    return { emailed: false };
   }
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: process.env.SMTP_SECURE === '1',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+  await transporter.sendMail({
+    from,
+    to,
+    subject: 'Your VECTOR assessment code',
+    text
+  });
+  return { emailed: true };
+}
 
-  const token = jwt.sign({ email, emp_id, name, role, attempt_type, timestamp: new Date().toISOString() }, SECRET);
-  res.json({ token, message: 'Login successful' });
+app.post('/api/otp/request', async (req, res) => {
+  try {
+    const { email, emp_id, name, role } = req.body || {};
+    if (!email || !emp_id || !name || !role) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const emailNorm = String(email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) {
+      return res.status(400).json({ error: 'Enter a valid work email' });
+    }
+    const otp = String(crypto.randomInt(100000, 1000000));
+    otpStore.set(emailNorm, {
+      hash: hashOtp(otp),
+      expires: Date.now() + 10 * 60 * 1000,
+      attempts: 0,
+      profile: {
+        email: emailNorm,
+        emp_id: String(emp_id).trim(),
+        name: String(name).trim(),
+        role: String(role).trim()
+      }
+    });
+    const sent = await sendOtpEmail(emailNorm, otp, name);
+    const payload = {
+      ok: true,
+      message: sent.emailed
+        ? `A 6-digit code was sent to ${emailNorm}`
+        : `A 6-digit code was generated for ${emailNorm}. Email is not configured on this machine, so the code is shown below.`
+    };
+    if (!sent.emailed || process.env.VECTOR_SHOW_OTP === '1') payload.devOtp = otp;
+    res.json(payload);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Could not send OTP' });
+  }
+});
+
+app.post('/api/otp/verify', (req, res) => {
+  const { email, otp } = req.body || {};
+  const emailNorm = String(email || '').trim().toLowerCase();
+  const rec = otpStore.get(emailNorm);
+  if (!rec || rec.expires < Date.now()) {
+    return res.status(401).json({ error: 'Code expired. Request a new one.' });
+  }
+  rec.attempts += 1;
+  if (rec.attempts > 5) {
+    otpStore.delete(emailNorm);
+    return res.status(401).json({ error: 'Too many attempts. Request a new code.' });
+  }
+  if (rec.hash !== hashOtp(String(otp || '').trim())) {
+    return res.status(401).json({ error: 'Invalid code' });
+  }
+  otpStore.delete(emailNorm);
+  const token = jwt.sign({ ...rec.profile, timestamp: new Date().toISOString() }, SECRET, { expiresIn: '12h' });
+  res.json({ token, ...rec.profile, message: 'Login successful' });
 });
 
 function cleanText(value) {
@@ -164,7 +244,7 @@ app.post('/api/save-assessment', async (req, res) => {
       user.name,
       user.role,
       report.timestamp,
-      user.attempt_type
+      ''
     ]);
 
     resultsSheet.addRow([
@@ -172,7 +252,7 @@ app.post('/api/save-assessment', async (req, res) => {
       user.emp_id,
       user.name,
       user.role,
-      user.attempt_type,
+      '',
       dimScores.V.level,
       dimScores.E.level,
       dimScores.C.level,

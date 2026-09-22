@@ -40,19 +40,29 @@ function dimType(dim) {
   return SIT_DIMS.has(dim) ? 'sit' : 'beh';
 }
 
+function itemLevel(score, type) {
+  const n = parseInt(score, 10);
+  if (!Number.isFinite(n)) return 1;
+  if (type === 'sit') {
+    if (n >= 4) return 5;
+    if (n >= 2) return 3;
+    return 1;
+  }
+  return Math.min(5, Math.max(1, n));
+}
+
 function scoreToLevel(total, type, count) {
   if (!count) return 1;
-  const pct = type === 'sit' ? (total - count) / (count * 3) : (total - count) / (count * 4);
+  if (type === 'sit') {
+    const avgItem = total / count;
+    return itemLevel(avgItem >= 3 ? 4 : avgItem >= 1.5 ? 2 : 1, 'sit');
+  }
+  const pct = (total - count) / (count * 4);
   if (pct < 0.2) return 1;
   if (pct < 0.4) return 2;
   if (pct < 0.65) return 3;
   if (pct < 0.85) return 4;
   return 5;
-}
-
-function questionsForRole(role) {
-  const QB = require('./questions');
-  return QB[role] || [];
 }
 
 function calculateScores(responses, questions) {
@@ -65,9 +75,13 @@ function calculateScores(responses, questions) {
     const dimQs = qs.filter((q) => q.dim === d);
     const type = (dimQs[0] && dimQs[0].type) || dimType(d);
     const count = dimQs.length || 1;
+    const itemLevels = dimQs.map((q) => itemLevel(responses[q.id], type));
     const total = dimQs.reduce((sum, q) => sum + (parseInt(responses[q.id], 10) || 1), 0);
-    const level = scoreToLevel(total, type, count);
-    out[d] = { level, type, total, count };
+    const avg = itemLevels.length
+      ? itemLevels.reduce((sum, n) => sum + n, 0) / itemLevels.length
+      : 1;
+    const level = Math.min(5, Math.max(1, Math.round(avg)));
+    out[d] = { level, type, total, count, avg };
   });
   return out;
 }
@@ -90,8 +104,18 @@ function deriveClass(scores) {
     const i = ord.indexOf(cls);
     if (i > 0) cls = ord[i - 1];
   }
-  const dom = Object.entries(scores).reduce((a, b) => (b[1].level > a[1].level ? b : a))[0];
+  const ranked = Object.entries(scores).sort((a, b) => {
+    if (b[1].level !== a[1].level) return b[1].level - a[1].level;
+    if ((b[1].total || 0) !== (a[1].total || 0)) return (b[1].total || 0) - (a[1].total || 0);
+    return DIM_ORDER.indexOf(a[0]) - DIM_ORDER.indexOf(b[0]);
+  });
+  const dom = ranked[0][0];
   return { cls, dom };
+}
+
+function questionsForRole(role) {
+  const QB = require('./questions');
+  return QB[role] || [];
 }
 
 function calculateVectorSign(scores) {
@@ -172,16 +196,24 @@ function getDimInterp(dim, level) {
 }
 
 function getProfileNarrative(scores, cls) {
-  const dom = Object.entries(scores).reduce((a, b) => (b[1].level > a[1].level ? b : a))[0];
+  const { dom } = deriveClass(scores);
   const weak = Object.entries(scores).reduce((a, b) => (b[1].level < a[1].level ? b : a))[0];
+  const domName = DIM_NAMES[dom];
+  const weakName = DIM_NAMES[weak];
   const n = {
-    V1: `This profile reflects a practitioner at the beginning of their Human-AI collaboration journey. The dimensions that determine your Vector are all actively developing - and all are developable through deliberate practice. <strong>Orchestration Intelligence is your highest-leverage starting point</strong>: the practitioner who learns to direct AI with intent, rather than use it as a sophisticated search engine, activates all other VECTOR dimensions more rapidly. The transition from V1 to V2 is achievable within weeks for someone who practices deliberately.`,
-    V2: `This profile reflects a practitioner who has moved beyond transactional AI use and is developing genuine directional capability. You know when AI is wrong more often than you accept output without question, and you have begun developing the framing and evaluation habits that characterize high-Vector work. <strong>The gap between V2 and V3 is the most consequential in the VECTOR scale</strong> - it is where AI use becomes AI collaboration, where the ceiling of the Human-AI unit genuinely rises because of your presence. That transition is unlocked by developing <strong>${DIM_NAMES[weak]}</strong> from its current level to Established.`,
-    V3: `This profile reflects a practitioner who has achieved genuine Human-AI integration. You and AI together produce outcomes that neither could reach independently - and this is not yet common. <strong>Your ${DIM_NAMES[dom]} is your signature dimension</strong>: the capability that most defines your current contribution and most differentiates you from practitioners at lower Vector classes. The path to V4 is less a personal development journey than a contribution shift: not just directing AI yourself, but designing how others in your team and organization direct AI.`,
-    V4: `This profile reflects a practitioner operating at the architecture level - you design the conditions in which others perform at higher Vector. <strong>This is a rare capability</strong>, and organizations that have practitioners at this level and deploy them well hold a genuine competitive advantage. Your role is not simply to perform but to raise the ceiling of every Human-AI unit you touch. The distance from V4 to V5 is not a personal development journey - it is a field contribution journey.`,
-    V5: `This profile reflects an exceptional practitioner - one whose Vector raises everyone else's. <strong>V5 is rare by design</strong>: it describes individuals whose presence, thinking, and frameworks elevate the field, not just their immediate organization. The V5 practitioner's most important contribution is the development of V4s: the deliberate investment in others' capability that multiplies your Vector beyond your own direct work.`
+    V1: `This profile reflects a practitioner at the beginning of their Human-AI collaboration journey. The dimensions that determine your Vector are all actively developing - and all are developable through deliberate practice. <strong>${domName} currently leads your profile</strong>, while <strong>${weakName}</strong> is the highest-leverage place to practise. Orchestration Intelligence is usually the fastest activator of the other VECTOR dimensions. The transition from V1 to V2 is achievable within weeks for someone who practices deliberately.`,
+    V2: `This profile reflects a practitioner who has moved beyond transactional AI use and is developing genuine directional capability. You know when AI is wrong more often than you accept output without question, and you have begun developing the framing and evaluation habits that characterize high-Vector work. <strong>Your Vector Signature is led by ${domName}</strong>. <strong>The gap between V2 and V3 is the most consequential in the VECTOR scale</strong> - it is where AI use becomes AI collaboration. That transition is unlocked by developing <strong>${weakName}</strong> from its current level to Established.`,
+    V3: `This profile reflects a practitioner who has achieved genuine Human-AI integration. You and AI together produce outcomes that neither could reach independently - and this is not yet common. <strong>Your ${domName} is your signature dimension</strong>: the capability that most defines your current contribution and most differentiates you from practitioners at lower Vector classes. The path to V4 is less a personal development journey than a contribution shift: not just directing AI yourself, but designing how others in your team and organization direct AI.`,
+    V4: `This profile reflects a practitioner operating at the architecture level - you design the conditions in which others perform at higher Vector. <strong>This is a rare capability</strong>, and organizations that have practitioners at this level and deploy them well hold a genuine competitive advantage. <strong>Your Vector Signature is led by ${domName}</strong> — ${dominantBlurb(dom)}. Your role is not simply to perform but to raise the ceiling of every Human-AI unit you touch. The distance from V4 to V5 is not a personal development journey - it is a field contribution journey.`,
+    V5: `This profile reflects an exceptional practitioner - one whose Vector raises everyone else's. <strong>V5 is rare by design</strong>: it describes individuals whose presence, thinking, and frameworks elevate the field, not just their immediate organization. <strong>Your defining signature dimension is ${domName}</strong> — ${dominantBlurb(dom)}. The V5 practitioner's most important contribution is the development of V4s: the deliberate investment in others' capability that multiplies your Vector beyond your own direct work.`
   };
   return n[cls] || n.V2;
+}
+
+function signatureSubtitle(cls, dom) {
+  const cd = CLASSES[cls] || CLASSES.V1;
+  const dimName = DIM_NAMES[dom] || DIM_NAMES.V;
+  return `${cd.name} · ${dimName} — ${cd.desc}`;
 }
 
 function getNextMove(scores, cls) {
@@ -269,6 +301,7 @@ function generateReport(scores, _responses, extras = {}) {
     strengths: strengths.map((d) => ({ dim: d, name: DIM_NAMES[d], level_name: DIM_LEVELS[scores[d].level] })),
     gaps: gaps.map((d) => ({ dim: d, name: DIM_NAMES[d], level_name: DIM_LEVELS[scores[d].level] })),
     narrative: getProfileNarrative(scores, cls),
+    signature_subtitle: signatureSubtitle(cls, dom),
     dominant_blurb: dominantBlurb(dom),
     next_move: getNextMove(scores, cls),
     next_class: nextCls,
@@ -287,6 +320,7 @@ module.exports = {
   generateReport,
   cleanDisplayText,
   scoreToLevel,
+  itemLevel,
   questionsForRole,
   CLASSES,
   DIM_LEVELS,

@@ -87,8 +87,33 @@ describe('calculateScores from responses', () => {
     expect(scores.V.level).toBe(5);
     expect(scores.O.level).toBe(5);
     const report = generateReport(scores, responses, { role: 'eng', name: 'Test' });
-    expect(report.vector_sign).toBe('V5-V');
+    expect(report.vector_sign).toBe('V5-O');
     expect(report.vector_class).toBe('V5');
     expect(report.dimension_scores.V).toBe(5);
+  });
+  test('mixed answers produce different dimension levels and a signature-specific subtitle', () => {
+    const questions = [];
+    ['V', 'E', 'C'].forEach((d) => {
+      for (let i = 1; i <= 5; i++) questions.push({ id: `${d}${i}`, dim: d, type: 'sit' });
+    });
+    ['O', 'T', 'R'].forEach((d) => {
+      for (let i = 1; i <= 5; i++) questions.push({ id: `${d}${i}`, dim: d, type: 'beh' });
+    });
+    const responses = {};
+    questions.forEach((q) => { responses[q.id] = 2; });
+    ['V1', 'V2', 'V3', 'V4', 'V5'].forEach((id) => { responses[id] = 4; });
+    ['O1', 'O2', 'O3', 'O4', 'O5'].forEach((id) => { responses[id] = 5; });
+    const scores = calculateScores(responses, questions);
+    expect(scores.V.level).toBeGreaterThan(scores.E.level);
+    expect(scores.O.level).toBeGreaterThan(scores.T.level);
+    const report = generateReport(scores, responses, { role: 'eng', name: 'Mix' });
+    expect(report.vector_sign).toMatch(/^V[1-5]-[VECTOR]$/);
+    expect(report.signature_subtitle).toMatch(/Vision Clarity|Orchestration Intelligence/);
+    const low = generateReport(
+      calculateScores(Object.fromEntries(questions.map((q) => [q.id, 1])), questions),
+      {},
+      { role: 'eng' }
+    );
+    expect(report.signature_subtitle).not.toBe(low.signature_subtitle);
   });
 });

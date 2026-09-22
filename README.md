@@ -10,9 +10,9 @@ npm install
 npm start
 ```
 
-Then open `http://localhost:3000/VECTORASSESSMENTENGINE` and hard-refresh (Ctrl+Shift+R). The welcome page must show a gold bar: **BUILD FIX-5**. If that bar is missing, the browser is still loading old files.
+Then open `http://localhost:3000/VECTORASSESSMENTENGINE` and hard-refresh (Ctrl+Shift+R). The welcome page must show a gold bar: **BUILD FIX-6**.
 
-You can also open `VECTOR.html` from this folder in a browser (no server needed for the assessment and HTML download).
+To send OTP by email, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`. Without those, the 6-digit code is printed in the terminal and shown on the welcome screen for local testing.
 
 ## Quick Start (Prototype)
 
@@ -34,11 +34,11 @@ Server runs on: `http://localhost:3000/VECTORASSESSMENTENGINE`
 
 ### 3. Use the App
 - Users go to the static link
-- Login with: Email, Employee ID, Name, Role, Attempt Type
+- Login with name, work email, employee ID, and role, then a 6-digit OTP sent to that email (if SMTP is not configured, the code is shown on screen for local use)
 - Answer 30 role-specific questions
 - Get VECTOR class (V1–V5) as the large report heading and Vector signature (for example `V4-V`)
 - Data auto-saves to **`data/assessments.xlsx`** only after you finish all 30 questions with `npm start` running. Close the Excel file first if you have it open.
-- On the report screen, use **Download Report**. That saves a formatted HTML file immediately (and a PDF when the download library loads). The welcome gold bar must say **BUILD FIX-4**.
+- On the report screen, use **Download PDF** (one PDF file)
 
 Admin Excel export: `http://localhost:3000/admin` → Download All Results (Excel), which is the same file.
 

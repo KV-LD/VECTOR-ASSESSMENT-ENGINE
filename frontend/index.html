@@ -141,7 +141,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-5 · 16 Sep 2026 · If this gold bar is missing you are running OLD files · Excel saves after you finish all 30 questions</div>
+    <div id="buildStamp" style="background:#C9A84C;color:#0B1929;font-family:Inter,sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-6 · 22 Sep 2026 · Email OTP login · one PDF download · per-dimension scoring</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -175,17 +175,17 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
         <option value="del">Delivery / Project Management</option>
       </select>
     </div>
-    <div class="form-row">
-      <label class="form-label">ATTEMPT TYPE</label>
-      <select id="attemptSelect" class="role-select" onchange="checkForm()">
-        <option value="">Select attempt type...</option>
-        <option value="Pre-Program">Pre-Program</option>
-        <option value="Post-Program">Post-Program</option>
-      </select>
+    <div class="form-row" id="otpRow" style="display:none">
+      <label class="form-label">EMAIL CODE</label>
+      <input type="text" id="otpInput" class="name-input" inputmode="numeric" maxlength="6" placeholder="6-digit code" oninput="checkForm()">
+      <div class="form-label" id="otpHint" style="margin-top:8px;color:var(--cyan);"></div>
     </div>
     <div class="field-error" id="formError">Please complete all fields before starting.</div>
-    <button class="btn-primary" id="startBtn" onclick="startAssessment()" disabled>
-      Begin Assessment
+    <button class="btn-primary" id="otpBtn" type="button" onclick="requestOtp()" disabled>
+      Send email code
+    </button>
+    <button class="btn-primary" id="startBtn" type="button" onclick="startAssessment()" disabled style="display:none;margin-left:0">
+      Verify and begin
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
     <div class="welcome-dims">
@@ -239,7 +239,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
     <div class="footer-logo">VECTOR</div>
     <div class="footer-actions">
       <button class="btn-restart" onclick="restart()">Retake Assessment</button>
-      <button class="btn-print" type="button" id="downloadReportBtn">Download Report</button>
+      <button class="btn-print" type="button" id="downloadReportBtn">Download PDF</button>
     </div>
     <div class="footer-meta">VECTOR &copy; Krishnan Nilakantan (NK)<br>Confidential Assessment Report</div>
   </div>
@@ -247,7 +247,7 @@ body{font-family:"Inter",sans-serif;background:var(--navy);color:var(--white);mi
 
 <script>
 const API = '';
-const BUILD = 'FIX-5';
+const BUILD = 'FIX-6';
 const QB={
 eng:[
 {id:"V1",dim:"V",type:"sit",text:"Your product manager sends a ticket: 'Improve user retention.' The codebase and data are available. Before engaging AI you:",opts:[{l:"A",t:"Start building immediately - the requirement is clear enough to begin.",s:1},{l:"B",t:"Clarify with the PM which user segment or metric defines retention.",s:2},{l:"C",t:"Write a one-paragraph problem statement defining what retention means in this product context, which technical intervention is most likely to move it, and what success looks like - before writing a single prompt.",s:4},{l:"D",t:"Ask the PM to provide a full technical specification before you engage.",s:1}]},
@@ -453,9 +453,24 @@ function dimType(dim) {
   return SIT_DIMS.has(dim) ? 'sit' : 'beh';
 }
 
+function itemLevel(score, type) {
+  const n = parseInt(score, 10);
+  if (!Number.isFinite(n)) return 1;
+  if (type === 'sit') {
+    if (n >= 4) return 5;
+    if (n >= 2) return 3;
+    return 1;
+  }
+  return Math.min(5, Math.max(1, n));
+}
+
 function scoreToLevel(total, type, count) {
   if (!count) return 1;
-  const pct = type === 'sit' ? (total - count) / (count * 3) : (total - count) / (count * 4);
+  if (type === 'sit') {
+    const avgItem = total / count;
+    return itemLevel(avgItem >= 3 ? 4 : avgItem >= 1.5 ? 2 : 1, 'sit');
+  }
+  const pct = (total - count) / (count * 4);
   if (pct < 0.2) return 1;
   if (pct < 0.4) return 2;
   if (pct < 0.65) return 3;
@@ -474,9 +489,13 @@ function calculateScores(responses, questions) {
     const dimQs = qs.filter((q) => q.dim === d);
     const type = (dimQs[0] && dimQs[0].type) || dimType(d);
     const count = dimQs.length || 1;
+    const itemLevels = dimQs.map((q) => itemLevel(responses[q.id], type));
     const total = dimQs.reduce((sum, q) => sum + (parseInt(responses[q.id], 10) || 1), 0);
-    const level = scoreToLevel(total, type, count);
-    out[d] = { level, type, total, count };
+    const avg = itemLevels.length
+      ? itemLevels.reduce((sum, n) => sum + n, 0) / itemLevels.length
+      : 1;
+    const level = Math.min(5, Math.max(1, Math.round(avg)));
+    out[d] = { level, type, total, count, avg };
   });
   return out;
 }
@@ -499,7 +518,12 @@ function deriveClass(scores) {
     const i = ord.indexOf(cls);
     if (i > 0) cls = ord[i - 1];
   }
-  const dom = Object.entries(scores).reduce((a, b) => (b[1].level > a[1].level ? b : a))[0];
+  const ranked = Object.entries(scores).sort((a, b) => {
+    if (b[1].level !== a[1].level) return b[1].level - a[1].level;
+    if ((b[1].total || 0) !== (a[1].total || 0)) return (b[1].total || 0) - (a[1].total || 0);
+    return DIM_ORDER.indexOf(a[0]) - DIM_ORDER.indexOf(b[0]);
+  });
+  const dom = ranked[0][0];
   return { cls, dom };
 }
 
@@ -581,16 +605,21 @@ function getDimInterp(dim, level) {
 }
 
 function getProfileNarrative(scores, cls) {
-  const dom = Object.entries(scores).reduce((a, b) => (b[1].level > a[1].level ? b : a))[0];
+  const { dom } = deriveClass(scores);
   const weak = Object.entries(scores).reduce((a, b) => (b[1].level < a[1].level ? b : a))[0];
   const n = {
-    V1: `This profile reflects a practitioner at the beginning of their Human-AI collaboration journey. The dimensions that determine your Vector are all actively developing - and all are developable through deliberate practice. <strong>Orchestration Intelligence is your highest-leverage starting point</strong>: the practitioner who learns to direct AI with intent, rather than use it as a sophisticated search engine, activates all other VECTOR dimensions more rapidly. The transition from V1 to V2 is achievable within weeks for someone who practices deliberately.`,
-    V2: `This profile reflects a practitioner who has moved beyond transactional AI use and is developing genuine directional capability. You know when AI is wrong more often than you accept output without question, and you have begun developing the framing and evaluation habits that characterize high-Vector work. <strong>The gap between V2 and V3 is the most consequential in the VECTOR scale</strong> - it is where AI use becomes AI collaboration, where the ceiling of the Human-AI unit genuinely rises because of your presence. That transition is unlocked by developing <strong>${DIM_NAMES[weak]}</strong> from its current level to Established.`,
-    V3: `This profile reflects a practitioner who has achieved genuine Human-AI integration. You and AI together produce outcomes that neither could reach independently - and this is not yet common. <strong>Your ${DIM_NAMES[dom]} is your signature dimension</strong>: the capability that most defines your current contribution and most differentiates you from practitioners at lower Vector classes. The path to V4 is less a personal development journey than a contribution shift: not just directing AI yourself, but designing how others in your team and organization direct AI.`,
-    V4: `This profile reflects a practitioner operating at the architecture level - you design the conditions in which others perform at higher Vector. <strong>This is a rare capability</strong>, and organizations that have practitioners at this level and deploy them well hold a genuine competitive advantage. Your role is not simply to perform but to raise the ceiling of every Human-AI unit you touch. The distance from V4 to V5 is not a personal development journey - it is a field contribution journey.`,
-    V5: `This profile reflects an exceptional practitioner - one whose Vector raises everyone else's. <strong>V5 is rare by design</strong>: it describes individuals whose presence, thinking, and frameworks elevate the field, not just their immediate organization. The V5 practitioner's most important contribution is the development of V4s: the deliberate investment in others' capability that multiplies your Vector beyond your own direct work.`
+    V1: `This profile reflects a practitioner at the beginning of their Human-AI collaboration journey. The dimensions that determine your Vector are all actively developing - and all are developable through deliberate practice. <strong>${DIM_NAMES[dom]} currently leads your profile</strong>, while <strong>${DIM_NAMES[weak]}</strong> is the highest-leverage place to practise.`,
+    V2: `This profile reflects a practitioner who has moved beyond transactional AI use and is developing genuine directional capability. <strong>Your Vector Signature is led by ${DIM_NAMES[dom]}</strong>. That transition to V3 is unlocked by developing <strong>${DIM_NAMES[weak]}</strong> from its current level to Established.`,
+    V3: `This profile reflects a practitioner who has achieved genuine Human-AI integration. <strong>Your ${DIM_NAMES[dom]} is your signature dimension</strong>: the capability that most defines your current contribution.`,
+    V4: `This profile reflects a practitioner operating at the architecture level. <strong>Your Vector Signature is led by ${DIM_NAMES[dom]}</strong> — ${dominantBlurb(dom)}. Your role is not simply to perform but to raise the ceiling of every Human-AI unit you touch.`,
+    V5: `This profile reflects an exceptional practitioner. <strong>Your defining signature dimension is ${DIM_NAMES[dom]}</strong> — ${dominantBlurb(dom)}. The V5 practitioner's most important contribution is the development of V4s.`
   };
   return n[cls] || n.V2;
+}
+
+function signatureSubtitle(cls, dom) {
+  const cd = CLASSES[cls] || CLASSES.V1;
+  return `${cd.name} · ${DIM_NAMES[dom] || DIM_NAMES.V} — ${cd.desc}`;
 }
 
 function getNextMove(scores, cls) {
@@ -678,6 +707,7 @@ function generateReport(scores, _responses, extras = {}) {
     strengths: strengths.map((d) => ({ dim: d, name: DIM_NAMES[d], level_name: DIM_LEVELS[scores[d].level] })),
     gaps: gaps.map((d) => ({ dim: d, name: DIM_NAMES[d], level_name: DIM_LEVELS[scores[d].level] })),
     narrative: getProfileNarrative(scores, cls),
+    signature_subtitle: signatureSubtitle(cls, dom),
     dominant_blurb: dominantBlurb(dom),
     next_move: getNextMove(scores, cls),
     next_class: nextCls,
@@ -705,49 +735,88 @@ function interleave(qs){
   Object.values(byDim).forEach(arr=>arr.forEach(q=>result.push(q)));
   return result;
 }
+function profileReady(){
+  return ['nameInput','emailInput','empInput'].every(id=>document.getElementById(id).value.trim())
+    && document.getElementById('roleSelect').value;
+}
 function checkForm(){
-  const ready=['nameInput','emailInput','empInput'].every(id=>document.getElementById(id).value.trim())
-    && document.getElementById('roleSelect').value
-    && document.getElementById('attemptSelect').value;
-  document.getElementById('startBtn').disabled=!ready;
+  const otpReady = document.getElementById('otpRow').style.display !== 'none'
+    && document.getElementById('otpInput').value.trim().length === 6;
+  document.getElementById('otpBtn').disabled = !profileReady();
+  document.getElementById('startBtn').disabled = !profileReady() || !otpReady;
 }
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
-}
-async function startAssessment(){
-  userData={
+function collectProfile(){
+  return {
     name:document.getElementById('nameInput').value.trim(),
     email:document.getElementById('emailInput').value.trim(),
     emp_id:document.getElementById('empInput').value.trim(),
-    role:document.getElementById('roleSelect').value,
-    attempt_type:document.getElementById('attemptSelect').value
+    role:document.getElementById('roleSelect').value
   };
-  if(!userData.name||!userData.email||!userData.emp_id||!userData.role||!userData.attempt_type){
+}
+async function requestOtp(){
+  const profile = collectProfile();
+  if(!profile.name||!profile.email||!profile.emp_id||!profile.role){
+    document.getElementById('formError').style.display='block';
+    return;
+  }
+  document.getElementById('formError').style.display='none';
+  document.getElementById('otpBtn').disabled=true;
+  try{
+    const res=await fetch((API||'')+'/api/otp/request',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(profile)
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || 'Could not send code');
+    document.getElementById('otpRow').style.display='block';
+    document.getElementById('startBtn').style.display='inline-flex';
+    const hint = data.devOtp
+      ? (data.message + ' Code: ' + data.devOtp)
+      : (data.message || 'Enter the code sent to your email.');
+    document.getElementById('otpHint').textContent=hint;
+    document.getElementById('otpInput').focus();
+  }catch(err){
+    document.getElementById('formError').textContent=err.message;
+    document.getElementById('formError').style.display='block';
+  }
+  checkForm();
+}
+async function startAssessment(){
+  userData=collectProfile();
+  const otp=document.getElementById('otpInput').value.trim();
+  if(!userData.name||!userData.email||!userData.emp_id||!userData.role||otp.length!==6){
+    document.getElementById('formError').style.display='block';
+    return;
+  }
+  try{
+    const verifyRes=await fetch((API||'')+'/api/otp/verify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ email:userData.email, otp })
+    });
+    const verifyData=await verifyRes.json().catch(()=>({}));
+    if(!verifyRes.ok) throw new Error(verifyData.error || 'Invalid code');
+    localStorage.setItem('token', verifyData.token);
+  }catch(err){
+    document.getElementById('formError').textContent=err.message;
     document.getElementById('formError').style.display='block';
     return;
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-5.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-6.');
     return;
   }
   QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));
   currentQ=0;answers={};
-  try{
-    const loginRes=await fetch((API||'')+'/api/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(userData)
-    });
-    if(loginRes.ok){
-      const loginData=await loginRes.json();
-      localStorage.setItem('token', loginData.token);
-    }
-  }catch(err){ console.warn('Excel login skipped', err); }
   showScreen('assessment');
   renderQ();
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
 }
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -759,7 +828,7 @@ function renderQ(){
   document.getElementById('progressText').textContent=(currentQ+1)+' / '+QUESTIONS.length;
   const ans=answers[q.id];
   const isLast=currentQ===QUESTIONS.length-1;
-  const optHtml=q.opts.map(o=>`<div class="opt-item${ans===o.s?' selected':''}" onclick="selectAns('${q.id}',${o.s},this)"><div class="opt-badge">${escapeHtml(o.l)}</div><div class="opt-text">${escapeHtml(cleanDisplayText(o.t))}</div></div>`).join('');
+  const optHtml=q.opts.map(o=>`<div class="opt-item${ans===o.s && answers['_sel_'+q.id]===o.l?' selected':''}" onclick="selectAns('${q.id}',${o.s},'${o.l}',this)"><div class="opt-badge">${escapeHtml(o.l)}</div><div class="opt-text">${escapeHtml(cleanDisplayText(o.t))}</div></div>`).join('');
   document.getElementById('questionCard').innerHTML=`
     <div class="q-accent"></div>
     <div class="q-num">Question ${currentQ+1} of ${QUESTIONS.length}</div>
@@ -771,8 +840,9 @@ function renderQ(){
       <button class="btn-next${ans!==undefined?' ready':''}" id="btnNext" onclick="nextQ()">${isLast?'View My Report':'Next'}</button>
     </div>`;
 }
-function selectAns(id,score,el){
+function selectAns(id,score,letter,el){
   answers[id]=score;
+  answers['_sel_'+id]=letter;
   document.querySelectorAll('.opt-item').forEach(o=>o.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('btnNext').classList.add('ready');
@@ -785,10 +855,14 @@ function nextQ(){
 function goBack(){if(currentQ>0){currentQ--;renderQ()}}
 function restart(){
   currentQ=0;answers={};QUESTIONS=[];
-  ['nameInput','emailInput','empInput'].forEach(id=>document.getElementById(id).value='');
+  ['nameInput','emailInput','empInput','otpInput'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('roleSelect').value='';
-  document.getElementById('attemptSelect').value='';
+  document.getElementById('otpRow').style.display='none';
+  document.getElementById('otpHint').textContent='';
+  document.getElementById('startBtn').style.display='none';
+  document.getElementById('otpBtn').disabled=true;
   document.getElementById('startBtn').disabled=true;
+  localStorage.removeItem('token');
   showScreen('welcome');
 }
 async function submitAssessment(){
@@ -797,19 +871,7 @@ async function submitAssessment(){
   renderReport(report);
   try{
     let token=localStorage.getItem('token');
-    if(!token){
-      const loginRes=await fetch((API||'')+'/api/login',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(userData)
-      });
-      if(loginRes.ok){
-        const loginData=await loginRes.json();
-        token=loginData.token;
-        localStorage.setItem('token', token);
-      }
-    }
-    if(!token) throw new Error('Could not reach the local server to save Excel. Keep npm start running and use http://localhost:3000/ (not a local VECTOR.html file).');
+    if(!token) throw new Error('Session expired. Return to the start screen and verify your email code again.');
     const saveRes=await fetch((API||'')+'/api/save-assessment',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -842,7 +904,7 @@ function renderReport(r){
   document.getElementById('rCalibration').textContent='Assessment calibrated for '+(r.role_label||userData.role)+' professionals';
   document.getElementById('rDate').textContent='Assessment completed: '+ds;
   document.getElementById('rClass').textContent=cls;
-  document.getElementById('rClassName').textContent=(r.class_name||'')+' — '+(r.class_desc||'');
+  document.getElementById('rClassName').textContent=r.signature_subtitle || ((r.class_name||'')+' · '+(DIM_NAMES[r.dominant]||'')+' — '+(r.class_desc||''));
   document.getElementById('rSig').textContent='Vector Signature: '+sign;
   const dimRows=(r.dimensions||[]).map(d=>{
     return `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter">${escapeHtml(d.dim)}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml(d.level_name||'')}</div></div><div class="dim-score-num">${d.level}/5</div></div><div class="dim-interpretation">${escapeHtml(d.interpretation||'')}</div></div>`;
@@ -962,25 +1024,22 @@ function downloadPdf(filename){
 }
 function downloadReport(ev){
   if (ev) ev.preventDefault();
-  const html = buildStandaloneReportHtml();
-  const base = reportBaseName();
-  const htmlName = base + '.html';
-  const pdfName = base + '.pdf';
-  const htmlBlob = new Blob(['\ufeff' + html], { type: 'application/octet-stream' });
-  try {
-    saveBlob(htmlBlob, htmlName);
-    postReportDownload(html, htmlName);
-    if (window.html2pdf) {
-      downloadPdf(pdfName).catch(function(){});
-    }
-  } catch (err) {
-    console.error(err);
-    try { saveBlob(htmlBlob, htmlName); } catch (e2) {
-      const w = window.open('', '_blank');
-      if (w) { w.document.write(html); w.document.close(); w.focus(); w.print(); }
-      else { window.print(); }
-    }
-  }
+  if (window.__vectorDownloading) return;
+  window.__vectorDownloading = true;
+  const btn = document.getElementById('downloadReportBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Preparing PDF...'; }
+  const pdfName = reportBaseName() + '.pdf';
+  const finish = function(){
+    window.__vectorDownloading = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Download PDF'; }
+  };
+  const run = (window.html2pdf)
+    ? downloadPdf(pdfName)
+    : Promise.reject(new Error('pdf library missing'));
+  run.then(finish, function(){
+    window.print();
+    finish();
+  });
 }
 document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
 </script>

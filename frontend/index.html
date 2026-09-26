@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VECTOR Assessment FIX-8 · UST</title>
+<title>VECTOR Assessment FIX-9 · UST</title>
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,6 +14,7 @@ html{scroll-behavior:smooth}
 body{font-family:"Source Sans 3",system-ui,sans-serif;background:var(--off);color:var(--text);min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh}
 .screen.active{display:flex;flex-direction:column}
+#buildStamp{background:#006E74;color:#FFFFFF;font-family:"Source Sans 3",sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px}
 
 #welcome{background:var(--off);align-items:center;justify-content:center;padding:40px 24px;position:relative;overflow:hidden}
 #welcome::before{content:"";position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,151,172,0.14) 0%,transparent 70%);pointer-events:none}
@@ -137,7 +138,7 @@ body{font-family:"Source Sans 3",system-ui,sans-serif;background:var(--off);colo
 .footer-meta{font-family:"DM Mono",monospace;font-size:10px;color:var(--gray);letter-spacing:1px;text-align:right}
 @media print{
   body{background:white!important}
-  #welcome,#assessment,.report-footer{display:none!important}
+  #welcome,#assessment,.report-footer,#vectorLiveBanner{display:none!important}
   #report{display:flex!important;background:white!important}
   .report-header{background:#006E74!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .report-body{padding:24px!important}
@@ -148,10 +149,11 @@ body{font-family:"Source Sans 3",system-ui,sans-serif;background:var(--off);colo
 </style>
 </head>
 <body>
+<div id="vectorLiveBanner" style="position:sticky;top:0;z-index:99999;background:#006E74;color:#FFFFFF;text-align:center;padding:14px 16px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:16px;letter-spacing:.04em;">VECTOR BUILD FIX-9 · 26 Sep 2026 · UST teal · OTP on this page · no Pre/Post</div>
 
 <div id="welcome" class="screen active">
   <div class="welcome-inner">
-    <div id="buildStamp" style="background:#006E74;color:#FFFFFF;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px;">BUILD FIX-8 · 22 Sep 2026 · UST teal · OTP always visible · no Pre/Post</div>
+    <div id="buildStamp">BUILD FIX-9 · 26 Sep 2026 · If this is gold/navy or shows Pre/Post, stop the old npm start</div>
 
     <div class="logo-mark"><span class="logo-v">V</span></div>
     <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
@@ -268,10 +270,10 @@ body{font-family:"Source Sans 3",system-ui,sans-serif;background:var(--off);colo
 
 <script>
 const API = '';
-const BUILD = 'FIX-8';
+const BUILD = 'FIX-9';
 if (typeof location !== 'undefined' && location.protocol === 'file:') {
   const stamp = document.getElementById('buildStamp');
-  if (stamp) stamp.textContent = 'STOP: run npm start and open http://localhost:3000/VECTORASSESSMENTENGINE. Do not open this HTML file from disk.';
+  if (stamp) stamp.textContent = 'STOP: run npm start and open http://localhost:3000/?v=FIX-9. Do not open this HTML file from disk.';
 }
 const QB={
 eng:[
@@ -831,7 +833,7 @@ async function startAssessment(){
   }
   const bank = (typeof QB !== 'undefined' && QB[userData.role]) ? QB[userData.role] : [];
   if(!bank.length){
-    alert('Question bank missing in this page. You are not running BUILD FIX-8.');
+    alert('Question bank missing in this page. You are not running BUILD FIX-9.');
     return;
   }
   QUESTIONS=interleave(bank.map(q=>({...q, text:cleanDisplayText(q.text), opts:q.opts.map(o=>({...o, t:cleanDisplayText(o.t)}))})));

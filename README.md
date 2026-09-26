@@ -1,6 +1,17 @@
 # VECTOR Assessment Engine
 
-The working UI is on branch `cursor/fix-npm-install-jsonwebtoken-03fa`. If you run `main`, you will still see `#` in answers, a concatenated Vector string, and a broken download.
+The live UI is on branch `cursor/fix-npm-install-jsonwebtoken-03fa`. **`main` is the old gold/navy app** (Pre/Post dropdown, no OTP panel). If you run `main`, none of the new work will appear.
+
+## See BUILD FIX-9
+
+1. Stop every old Node process on port 3000 (this is the usual reason the old page stays on screen):
+
+```bat
+netstat -ano | findstr :3000
+taskkill /PID <pid> /F
+```
+
+2. Pull this branch and start:
 
 ```bash
 git fetch origin
@@ -10,65 +21,12 @@ npm install
 npm start
 ```
 
-Then open `http://localhost:3000/VECTORASSESSMENTENGINE` and hard-refresh (Ctrl+Shift+R). The welcome page must show a gold bar: **BUILD FIX-6**.
+The terminal must print a box that says **VECTOR BUILD FIX-9**. If that box is missing, you started an old folder.
 
-To send OTP by email, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`. Without those, the 6-digit code is printed in the terminal and shown on the welcome screen for local testing.
+3. Open **http://localhost:3000/?v=FIX-9** (not `VECTOR.html` from File Explorer).
 
-## Quick Start (Prototype)
+The top of the page must be a teal bar: **VECTOR BUILD FIX-9 · 26 Sep 2026**. Confirm at http://localhost:3000/api/version — it must return `"build":"FIX-9"`.
 
-A Node.js web application for conducting VECTOR capability assessments with role-based questions, real-time scoring, and Excel data storage.
+Without SMTP, the 6-digit code is shown in large type on the start screen.
 
-## Quick Start (Prototype)
-
-### 1. Install Dependencies
-```bash
-npm install
-```
-
-### 2. Run the Server
-```bash
-npm start
-```
-
-Server runs on: `http://localhost:3000/VECTORASSESSMENTENGINE`
-
-### 3. Use the App
-- Users go to the static link
-- Login with name, work email, employee ID, and role, then a 6-digit OTP sent to that email (if SMTP is not configured, the code is shown on screen for local use)
-- Answer 30 role-specific questions
-- Get VECTOR class (V1–V5) as the large report heading and Vector signature (for example `V4-V`)
-- Data auto-saves to **`data/assessments.xlsx`** only after you finish all 30 questions with `npm start` running. Close the Excel file first if you have it open.
-- On the report screen, use **Download PDF** (one PDF file)
-
-Admin Excel export: `http://localhost:3000/admin` → Download All Results (Excel), which is the same file.
-
-## Project Structure
-
-```
-├── backend/
-│   ├── server.js          # Express server & API
-│   ├── scoring.js         # Scoring logic & calculations
-│   └── questions.js       # Question bank by role
-├── frontend/
-│   └── index.html         # Assessment UI + Report
-├── data/
-│   └── assessments.xlsx   # Data storage (auto-created)
-└── package.json
-```
-
-## Features (v1.0)
-
-✅ Role-based question branching (5 roles × 30 questions each)
-✅ Silent scoring with real-time calculation
-✅ VECTOR sign generation + class assignment
-✅ HTML report with downloadable link
-✅ Excel tracking (user, role, scores, timestamp, attempt type)
-✅ Duplicate attempt detection (by email/ID + timestamp)
-
-## Next Steps
-
-- [ ] PDF export from HTML report
-- [ ] Admin dashboard (view all results)
-- [ ] Authentication for admin
-- [ ] Azure WebApp deployment
-- [ ] Power Automate integration
+Data is stored in `data/assessments.xlsx` (close the file in Excel before finishing an assessment). Admin: http://localhost:3000/admin (`admin@ust.com` / `admin123`).

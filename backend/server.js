@@ -10,7 +10,9 @@ const questionsByRole = require('./questions');
 const { calculateScores, generateReport, cleanDisplayText, DIM_LEVELS } = require('./scoring');
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const BUILD_ID = 'FIX-9';
+const FRONTEND_DIR = path.join(__dirname, '../frontend');
 const SECRET = 'vector-secret-key-change-in-production';
 const ADMIN_SECRET = 'admin-secret-key-change-in-production';
 function dataFile() {
@@ -111,20 +113,54 @@ app.disable('etag');
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('X-Vector-Build', BUILD_ID);
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
-app.use(express.static(path.join(__dirname, '../frontend'), {
+
+function sendFrontendHtml(res, filename) {
+  const file = path.join(FRONTEND_DIR, filename);
+  let html = fs.readFileSync(file, 'utf8');
+  const served = new Date().toISOString();
+  html = html.replace(/BUILD FIX-\d+/g, 'BUILD ' + BUILD_ID);
+  html = html.replace(/const BUILD = 'FIX-\d+'/, "const BUILD = '" + BUILD_ID + "'");
+  html = html.replace(
+    '<body>',
+    `<body data-vector-build="${BUILD_ID}"><!-- served ${served} ${BUILD_ID} -->`
+  );
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('X-Vector-Build', BUILD_ID);
+  res.send(html);
+}
+
+app.get(['/', '/index.html', '/VECTOR.html', '/VECTORASSESSMENTENGINE', '/frontend/index.html', '/frontend/VECTOR.html'], (req, res) => {
+  sendFrontendHtml(res, 'index.html');
+});
+app.get(['/admin', '/admin.html', '/frontend/admin.html'], (req, res) => {
+  sendFrontendHtml(res, 'admin.html');
+});
+app.get('/api/version', (req, res) => {
+  res.json({
+    build: BUILD_ID,
+    app: 'VECTOR Assessment Engine',
+    html: path.join(FRONTEND_DIR, 'index.html'),
+    excel: dataFile()
+  });
+});
+
+app.use(express.static(FRONTEND_DIR, {
   etag: false,
+  index: false,
   lastModified: false,
-  setHeaders(res, filePath) {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    }
+  setHeaders(res) {
     res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Vector-Build', BUILD_ID);
   }
 }));
 
@@ -569,34 +605,43 @@ app.post('/api/download-report', (req, res) => {
   res.send(html);
 });
 
-// Serve frontend
-app.get(['/', '/VECTORASSESSMENTENGINE', '/VECTOR.html'], (req, res) => {
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/admin.html'));
-});
+// HTML is served above, before static files, so an old VECTOR.html cannot win.
 
 function startServer() {
-  return app.listen(PORT, async () => {
+  const server = app.listen(PORT, async () => {
     try {
       await initializeExcel();
     } catch (error) {
       console.error('Failed to initialize Excel storage:', error);
       process.exit(1);
     }
-    console.log(`🚀 VECTOR Assessment Engine running on http://localhost:${PORT}/VECTORASSESSMENTENGINE`);
-    console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
-    console.log(`Score data Excel: ${dataFile()}`);
-    console.log(`Login/score backup: ${jsonlFile()}`);
+    console.log('');
+    console.log('========================================');
+    console.log(`  VECTOR BUILD ${BUILD_ID}`);
+    console.log('  If this box is missing, an OLD node process is running.');
+    console.log(`  Open: http://localhost:${PORT}/?v=${BUILD_ID}`);
+    console.log(`  Admin: http://localhost:${PORT}/admin`);
+    console.log(`  Version: http://localhost:${PORT}/api/version`);
+    console.log(`  Excel: ${dataFile()}`);
+    console.log('========================================');
+    console.log('');
   });
+  server.on('error', (error) => {
+    if (error && error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use — that is almost always the OLD VECTOR app.`);
+      console.error('Stop the old process, then start again:');
+      console.error('  Windows: netstat -ano | findstr :3000');
+      console.error('           taskkill /PID <pid> /F');
+      console.error('  macOS/Linux: lsof -i :3000   then kill <pid>');
+      process.exit(1);
+    }
+    throw error;
+  });
+  return server;
 }
 
 if (require.main === module) {
   startServer();
 }
 
-module.exports = { app, startServer, reportDownloadName };
+module.exports = { app, startServer, reportDownloadName, BUILD_ID };

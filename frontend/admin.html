@@ -180,6 +180,7 @@
   </style>
 </head>
 <body>
+<div style="background:#006E74;color:#fff;text-align:center;padding:12px;font-weight:700;">VECTOR ADMIN BUILD FIX-9</div>
 
 <!-- Login Screen -->
 <div id="login-screen" class="screen active">
@@ -209,6 +210,7 @@
     </div>
 
     <button class="btn btn-export" onclick="downloadExcel()">⬇️ Download All Results (Excel)</button>
+    <p style="font-size:13px;color:var(--ust-muted);margin:8px 0 20px;">Score data is stored on the server in <code>data/assessments.xlsx</code>. This download is that workbook.</p>
 
     <div class="filters">
       <div class="filter-group">
@@ -220,14 +222,6 @@
           <option value="fin">Finance</option>
           <option value="hr">HR/L&D</option>
           <option value="del">Delivery/PM</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Attempt Type</label>
-        <select id="filter-attempt" onchange="filterResults()">
-          <option value="">All Attempts</option>
-          <option value="Pre-Program">Pre-Program</option>
-          <option value="Post-Program">Post-Program</option>
         </select>
       </div>
       <div class="filter-group">
@@ -246,12 +240,12 @@
         <div class="stat-value" id="stat-users">0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Pre-Program</div>
-        <div class="stat-value" id="stat-pre">0</div>
+        <div class="stat-label">Repeat Attempts</div>
+        <div class="stat-value" id="stat-repeats">0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Post-Program</div>
-        <div class="stat-value" id="stat-post">0</div>
+        <div class="stat-label">Latest Attempt No.</div>
+        <div class="stat-value" id="stat-latest">0</div>
       </div>
     </div>
 
@@ -278,7 +272,7 @@
 </div>
 
 <script>
-const API = 'http://localhost:3000';
+const API = '';
 let allResults = [];
 let adminToken = '';
 
@@ -336,10 +330,10 @@ function updateStats() {
   const uniqueUsers = new Set(allResults.map(r => r.email)).size;
   document.getElementById('stat-users').textContent = uniqueUsers;
 
-  const preCount = allResults.filter(r => r.attempt_type === 'Pre-Program').length;
-  const postCount = allResults.filter(r => r.attempt_type === 'Post-Program').length;
-  document.getElementById('stat-pre').textContent = preCount;
-  document.getElementById('stat-post').textContent = postCount;
+  const repeats = allResults.filter(r => Number(r.attempt_type) > 1).length;
+  const latest = allResults.reduce((max, r) => Math.max(max, Number(r.attempt_type) || 0), 0);
+  document.getElementById('stat-repeats').textContent = repeats;
+  document.getElementById('stat-latest').textContent = latest;
 }
 
 function displayResults(results) {
@@ -355,7 +349,7 @@ function displayResults(results) {
       <td>${r.email}</td>
       <td>${r.name}</td>
       <td>${r.role}</td>
-      <td><span class="badge ${r.attempt_type === 'Pre-Program' ? 'badge-pre' : 'badge-post'}">${r.attempt_type}</span></td>
+      <td>${r.attempt_type || ''}</td>
       <td><span class="vector-sign">${r.vector_sign}</span></td>
       <td>${r.vector_class}</td>
       <td>${new Date(r.timestamp).toLocaleString()}</td>
@@ -366,14 +360,12 @@ function displayResults(results) {
 
 function filterResults() {
   const role = document.getElementById('filter-role').value;
-  const attempt = document.getElementById('filter-attempt').value;
   const email = document.getElementById('search-email').value.toLowerCase();
 
   let filtered = allResults.filter(r => {
     const matchRole = !role || r.role === role;
-    const matchAttempt = !attempt || r.attempt_type === attempt;
     const matchEmail = !email || r.email.toLowerCase().includes(email);
-    return matchRole && matchAttempt && matchEmail;
+    return matchRole && matchEmail;
   });
 
   displayResults(filtered);
@@ -391,10 +383,10 @@ async function viewUserAttempts(email) {
     data.attempts.forEach((att, idx) => {
       html += `
         <div style="margin: 20px 0; padding: 15px; background: var(--ust-off); border-radius: 8px;">
-          <strong>Attempt ${idx + 1}</strong> (${att.attempt_type})<br>
+          <strong>Attempt ${att.attempt_type || (idx + 1)}</strong><br>
           <strong>Vector Sign:</strong> ${att.vector_sign}<br>
           <strong>Class:</strong> ${att.vector_class}<br>
-          <strong>Scores:</strong> V:${att.scores.V} E:${att.scores.E} C:${att.scores.C} T:${att.scores.T} O:${att.scores.O} R:${att.scores.R}<br>
+          <strong>Level:</strong> V:${att.scores.V} E:${att.scores.E} C:${att.scores.C} T:${att.scores.T} O:${att.scores.O} R:${att.scores.R}<br>
           <strong>Date:</strong> ${new Date(att.timestamp).toLocaleString()}
         </div>
       `;

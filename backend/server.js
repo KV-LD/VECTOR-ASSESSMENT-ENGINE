@@ -5,7 +5,6 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const questionsByRole = require('./questions');
 const { calculateScores, generateReport, cleanDisplayText, DIM_LEVELS } = require('./scoring');
 
@@ -228,10 +227,24 @@ function smtpConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
+function loadNodemailer() {
+  try {
+    return require('nodemailer');
+  } catch (error) {
+    return null;
+  }
+}
+
 async function sendOtpEmail(to, otp, name) {
   const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'vector@localhost';
   const text = `Hello ${name || ''},\n\nYour VECTOR assessment code is ${otp}.\nIt expires in 10 minutes.\n\nIf you did not request this, ignore this email.`;
   if (!smtpConfigured()) {
+    console.log(`OTP for ${to}: ${otp}`);
+    return { emailed: false };
+  }
+  const nodemailer = loadNodemailer();
+  if (!nodemailer) {
+    console.log('nodemailer is not installed. Showing the OTP on screen instead. Run: npm install');
     console.log(`OTP for ${to}: ${otp}`);
     return { emailed: false };
   }
@@ -623,6 +636,9 @@ function startServer() {
     console.log(`  Admin: http://localhost:${PORT}/admin`);
     console.log(`  Version: http://localhost:${PORT}/api/version`);
     console.log(`  Excel: ${dataFile()}`);
+    if (!loadNodemailer()) {
+      console.log('  nodemailer not installed — OTP will show on screen. Optional: npm install');
+    }
     console.log('========================================');
     console.log('');
   });

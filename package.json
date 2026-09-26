@@ -4,7 +4,7 @@
   "description": "VECTOR Assessment Platform - Human-AI Capability Profile",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
+    "start": "node backend/ensure-deps.js",
     "dev": "nodemon backend/server.js",
     "test": "jest --testEnvironment=node",
     "seed": "node backend/scripts/seed.js"

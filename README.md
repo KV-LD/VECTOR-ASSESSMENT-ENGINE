@@ -1,55 +1,36 @@
-# VECTOR Assessment Engine
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A Node.js web application for conducting VECTOR capability assessments with role-based questions, real-time scoring, and Excel data storage.
+## Getting Started
 
-## Quick Start (Prototype)
+First, run the development server:
 
-### 1. Install Dependencies
 ```bash
-npm install
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### 2. Run the Server
-```bash
-npm start
-```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Server runs on: `http://localhost:3000/VECTORASSESSMENTENGINE`
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### 3. Use the App
-- Users go to the static link
-- Login with: Email, Employee ID, Name, Role, Attempt Type
-- Answer 30 role-specific questions
-- Get VECTOR sign + class report
-- Data auto-saves to `data/assessments.xlsx`
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Project Structure
+## Learn More
 
-```
-├── backend/
-│   ├── server.js          # Express server & API
-│   ├── scoring.js         # Scoring logic & calculations
-│   └── questions.js       # Question bank by role
-├── frontend/
-│   └── index.html         # Assessment UI + Report
-├── data/
-│   └── assessments.xlsx   # Data storage (auto-created)
-└── package.json
-```
+To learn more about Next.js, take a look at the following resources:
 
-## Features (v1.0)
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-✅ Role-based question branching (5 roles × 30 questions each)
-✅ Silent scoring with real-time calculation
-✅ VECTOR sign generation + class assignment
-✅ HTML report with downloadable link
-✅ Excel tracking (user, role, scores, timestamp, attempt type)
-✅ Duplicate attempt detection (by email/ID + timestamp)
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Next Steps
+## Deploy on Vercel
 
-- [ ] PDF export from HTML report
-- [ ] Admin dashboard (view all results)
-- [ ] Authentication for admin
-- [ ] Azure WebApp deployment
-- [ ] Power Automate integration
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

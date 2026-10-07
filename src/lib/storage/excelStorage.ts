@@ -1,5 +1,3 @@
-'use client';
-
 import * as XLSX from 'xlsx';
 import type { StorageProvider } from './index';
 import type { OtpRecord, AttemptRecord } from '../types';

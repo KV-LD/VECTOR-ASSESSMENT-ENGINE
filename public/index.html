@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VECTOR Assessment V2 · UST</title>
+  <meta name="theme-color" content="#006E74">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div id="vectorLiveBanner">VECTOR BUILD V2 · UST teal · Excel backend · OTP on this page · no Pre/Post</div>
+
+<div id="welcome" class="screen active">
+  <div class="welcome-inner">
+    <div id="buildStamp">BUILD V2 · If this is gold/navy or shows Pre/Post, stop the old npm start</div>
+    <div class="logo-mark"><span class="logo-v">V</span></div>
+    <div class="welcome-tag">HUMAN-AI CAPABILITY ASSESSMENT</div>
+    <h1 class="welcome-title">Discover Your<br><span>VECTOR</span></h1>
+    <p class="welcome-sub">A professional assessment of six dimensions of irreducibly human contribution in an AI-era organization. Questions are calibrated to your professional context. Answer honestly - not aspirationally.</p>
+    <div class="welcome-meta">
+      <div class="meta-item"><span class="meta-num">30</span><div class="meta-label">Questions</div></div>
+      <div class="meta-item"><span class="meta-num">15</span><div class="meta-label">Minutes</div></div>
+      <div class="meta-item"><span class="meta-num">6</span><div class="meta-label">Dimensions</div></div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">YOUR FULL NAME</label>
+      <input type="text" id="nameInput" class="name-input" placeholder="Enter your full name to begin" oninput="checkForm()">
+    </div>
+    <div class="form-row">
+      <label class="form-label">WORK EMAIL</label>
+      <input type="email" id="emailInput" class="name-input" placeholder="name@company.com" oninput="checkForm()">
+    </div>
+    <div class="form-row">
+      <label class="form-label">EMPLOYEE ID</label>
+      <input type="text" id="empInput" class="name-input" placeholder="EMP-12345" oninput="checkForm()">
+    </div>
+    <div class="form-row">
+      <label class="form-label">YOUR PRIMARY ROLE</label>
+      <select id="roleSelect" class="role-select" onchange="checkForm()">
+        <option value="">Select your role...</option>
+        <option value="eng">Software Engineer / Technology</option>
+        <option value="con">Consultant / Strategy</option>
+        <option value="fin">Finance / Risk</option>
+        <option value="hr">HR / L&amp;D / People</option>
+        <option value="del">Delivery / Project Management</option>
+      </select>
+    </div>
+    <div class="otp-panel" id="otpRow">
+      <label class="form-label">EMAIL CODE (6 DIGITS)</label>
+      <input type="text" id="otpInput" class="name-input" inputmode="numeric" maxlength="6" placeholder="Enter the 6-digit code" autocomplete="one-time-code" oninput="checkForm()">
+      <div class="otp-digits" id="otpDigits">------</div>
+      <div class="otp-hint" id="otpHint">Complete your details, then send a code. The code appears here in large type when email is not configured.</div>
+    </div>
+    <div class="field-error" id="formError">Please complete all fields before starting. There is no Pre/Post assessment dropdown in this version.</div>
+    <button class="btn-primary" id="otpBtn" type="button" onclick="requestOtp()" disabled>Send email code</button>
+    <button class="btn-primary" id="startBtn" type="button" onclick="startAssessment()" disabled>
+      Verify and begin
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+    <div class="welcome-dims">
+      <span class="dim-pill">V - Vision Clarity</span>
+      <span class="dim-pill">E - Edge Judgment</span>
+      <span class="dim-pill">C - Context Fluency</span>
+      <span class="dim-pill">T - Trust Architecture</span>
+      <span class="dim-pill">O - Orchestration</span>
+      <span class="dim-pill">R - Range</span>
+    </div>
+    <div class="welcome-copyright">
+      VECTOR is a proprietary framework developed by <strong>Krishnan Nilakantan (NK)</strong>.<br>
+      Free to use. Please credit the framework to NK when sharing or applying it.
+    </div>
+  </div>
+</div>
+
+<div id="assessment" class="screen">
+  <div class="assess-header">
+    <div class="assess-logo">VECTOR</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="progressText">1 / 30</div>
+    </div>
+  </div>
+  <div class="assess-body">
+    <div class="question-card" id="questionCard"></div>
+  </div>
+</div>
+
+<div id="report" class="screen">
+  <div class="report-header">
+    <div class="report-header-inner">
+      <div>
+        <div class="report-eyebrow">VECTOR - Human-AI Capability Profile</div>
+        <div class="report-name" id="rName"></div>
+        <div class="report-role-badge" id="rRole"></div>
+        <div class="report-calibration" id="rCalibration"></div>
+        <div class="report-date" id="rDate"></div>
+      </div>
+      <div class="report-class-block">
+        <div class="class-sign-row">
+          <div class="class-col">
+            <div class="class-label">VECTOR CLASS</div>
+            <div class="class-display" id="rClass"></div>
+            <div class="class-name" id="rClassName"></div>
+          </div>
+          <div class="sig-col">
+            <div class="class-label">VECTOR SIGN</div>
+            <div class="sig-line">
+              <div class="sig-display" id="rSig"></div>
+              <div class="sig-interp" id="rSigInterp"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="save-banner" id="saveBanner"></div>
+  <div class="report-body" id="reportBody"></div>
+  <div class="report-copyright">
+    <strong>VECTOR Framework &copy; Krishnan Nilakantan (NK)</strong><br>
+    VECTOR is a proprietary framework developed by Krishnan Nilakantan (NK). This assessment is free to use.
+    When sharing, publishing, or applying this framework in any form, please credit it to <strong>Krishnan Nilakantan (NK)</strong>.
+  </div>
+  <div class="report-footer">
+    <div class="footer-logo">VECTOR</div>
+    <div class="footer-actions">
+      <button class="btn-restart" onclick="restart()">Retake Assessment</button>
+      <button class="btn-print" type="button" id="downloadReportBtn">Download as PDF</button>
+    </div>
+    <div class="footer-meta">VECTOR &copy; Krishnan Nilakantan (NK)<br>Confidential Assessment Report</div>
+  </div>
+</div>
+
+<script>
+const API = '';
+const BUILD = 'V2';
+</script>
+<script src="/js/app.js"></script>
+<script src="/vendor/html2pdf.bundle.min.js"></script>
+</body>
+</html>

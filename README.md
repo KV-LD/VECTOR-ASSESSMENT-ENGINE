@@ -1,55 +1,53 @@
 # VECTOR Assessment Engine
 
-A Node.js web application for conducting VECTOR capability assessments with role-based questions, real-time scoring, and Excel data storage.
+Human-AI capability assessment for UST practitioners. This is a clean V2 rebuild: Node/Express API, static UST-branded UI, **Excel storage on localhost**, and a storage adapter so the same app can move to **Azure Web App + SQL** when credentials are ready.
 
-## Quick Start (Prototype)
+Framework by **Krishnan Nilakantan (NK)**. Free to use with credit.
 
-### 1. Install Dependencies
+## Run locally (prototype)
+
 ```bash
 npm install
-```
-
-### 2. Run the Server
-```bash
 npm start
 ```
 
-Server runs on: `http://localhost:3000/VECTORASSESSMENTENGINE`
+Open:
 
-### 3. Use the App
-- Users go to the static link
-- Login with: Email, Employee ID, Name, Role, Attempt Type
-- Answer 30 role-specific questions
-- Get VECTOR sign + class report
-- Data auto-saves to `data/assessments.xlsx`
+- Assessment: http://localhost:3000/
+- Admin: http://localhost:3000/admin (`admin@ust.com` / `admin123`)
+- Health: http://localhost:3000/health
 
-## Project Structure
+The terminal prints a **VECTOR BUILD V2** box. If that box is missing, an old process is still holding port 3000.
 
+Without SMTP, the 6-digit email code is shown in large type on the start screen and in the terminal.
+
+Data is stored in `data/assessments.xlsx` (gitignored). Close the file in Excel before finishing an assessment.
+
+## What it does
+
+- 30 role-calibrated questions (5 professional roles)
+- Email OTP login (no Pre/Post attempt type)
+- PRD scoring: VECTOR class (V1-V5) and signature such as `V4-V`
+- Report with framework labels (Emerging → Defining), not n/5
+- Single **Download as PDF**
+- Admin list/export of Excel results
+
+## Azure later
+
+Keep `STORAGE_DRIVER=excel` for localhost. When you have a database and Azure credentials:
+
+1. Create an Azure Web App and set Application Settings from `.env.example`
+2. Set `STORAGE_DRIVER=azure-sql` and `AZURE_SQL_CONNECTION_STRING`
+3. Deploy this same Node app (`npm start`, or the included `web.config`)
+
+See [docs/AZURE.md](docs/AZURE.md).
+
+## Tests
+
+```bash
+npm test
 ```
-├── backend/
-│   ├── server.js          # Express server & API
-│   ├── scoring.js         # Scoring logic & calculations
-│   └── questions.js       # Question bank by role
-├── frontend/
-│   └── index.html         # Assessment UI + Report
-├── data/
-│   └── assessments.xlsx   # Data storage (auto-created)
-└── package.json
-```
 
-## Features (v1.0)
+## Brand
 
-✅ Role-based question branching (5 roles × 30 questions each)
-✅ Silent scoring with real-time calculation
-✅ VECTOR sign generation + class assignment
-✅ HTML report with downloadable link
-✅ Excel tracking (user, role, scores, timestamp, attempt type)
-✅ Duplicate attempt detection (by email/ID + timestamp)
-
-## Next Steps
-
-- [ ] PDF export from HTML report
-- [ ] Admin dashboard (view all results)
-- [ ] Authentication for admin
-- [ ] Azure WebApp deployment
-- [ ] Power Automate integration
+UST teal (`#006E74`, `#0097AC`), soft black (`#231F20`), off-white (`#EEF6F7`), Source Sans 3 / Source Serif 4.

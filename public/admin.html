@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VECTOR Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .admin-login { max-width: 400px; margin: 80px auto; background: #fff; padding: 40px; border-radius: 12px; border: 1px solid #D5E8EA; }
+    .admin-login h1 { font-family: "Source Serif 4", serif; color: #006E74; text-align: center; margin-bottom: 24px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #006E74; }
+    .admin-header h1 { font-family: "Source Serif 4", serif; color: #006E74; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 20px 0; }
+    .stat-card { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #D5E8EA; }
+    .stat-label { font-size: 12px; color: rgba(35,31,32,.55); text-transform: uppercase; letter-spacing: .08em; }
+    .stat-value { font-size: 32px; font-weight: 700; color: #006E74; margin-top: 8px; }
+    .results-table { background: #fff; border-radius: 10px; border: 1px solid #D5E8EA; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #EEF6F7; padding: 14px; text-align: left; }
+    td { padding: 12px 14px; border-bottom: 1px solid #D5E8EA; }
+    .filters { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .error { color: #e0604a; font-size: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<div id="vectorLiveBanner">VECTOR ADMIN BUILD V2</div>
+
+<div id="login-screen" class="screen active">
+  <div class="admin-login">
+    <h1>Admin Login</h1>
+    <form onsubmit="handleAdminLogin(event)">
+      <div class="form-row">
+        <label class="form-label">Email</label>
+        <input type="email" id="admin-email" class="name-input" placeholder="admin@ust.com" required>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Password</label>
+        <input type="password" id="admin-password" class="name-input" placeholder="password" required>
+      </div>
+      <button type="submit" class="btn-primary">Login</button>
+      <div class="error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="dashboard-screen" class="screen">
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <h1>VECTOR Assessment Dashboard</h1>
+      <button class="btn-restart" style="border-color:#e0604a;color:#e0604a" onclick="logout()">Logout</button>
+    </div>
+    <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="downloadExcel()">Download All Results (Excel)</button>
+    <p style="font-size:13px;color:#6B7375;margin:12px 0 20px;">Prototype data lives in <code>data/assessments.xlsx</code> on the machine running the server. Azure SQL can replace this later.</p>
+    <div class="filters">
+      <div>
+        <label class="form-label">Role</label>
+        <select id="filter-role" class="role-select" onchange="filterResults()">
+          <option value="">All Roles</option>
+          <option value="eng">Software Engineer</option>
+          <option value="con">Consultant</option>
+          <option value="fin">Finance</option>
+          <option value="hr">HR/L&amp;D</option>
+          <option value="del">Delivery/PM</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Search Email</label>
+        <input type="email" id="search-email" class="name-input" placeholder="Search..." onkeyup="filterResults()">
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">Total Attempts</div><div class="stat-value" id="stat-total">0</div></div>
+      <div class="stat-card"><div class="stat-label">Unique Users</div><div class="stat-value" id="stat-users">0</div></div>
+      <div class="stat-card"><div class="stat-label">Repeat Attempts</div><div class="stat-value" id="stat-repeats">0</div></div>
+      <div class="stat-card"><div class="stat-label">Latest Attempt No.</div><div class="stat-value" id="stat-latest">0</div></div>
+    </div>
+    <div class="results-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th><th>Name</th><th>Role</th><th>Attempt</th>
+            <th>Vector Sign</th><th>Class</th><th>Timestamp</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:#6B7375">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="attemptModal">
+  <div class="modal-card">
+    <h3 id="modalTitle">Attempts</h3>
+    <div id="modalBody"></div>
+    <button class="btn-primary" type="button" onclick="closeModal()" style="margin-top:16px">Close</button>
+  </div>
+</div>
+
+<script>
+const BUILD = 'V2';
+</script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

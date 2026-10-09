@@ -34,10 +34,13 @@ describe('Excel assessment save', () => {
       for (let i = 1; i <= 5; i++) responses[`${d}${i}`] = 5;
     });
 
+    const choices = {};
+    Object.keys(responses).forEach((id) => { choices[id] = responses[id] >= 5 ? 'E' : 'C'; });
+
     const saved = await request(app)
       .post('/api/assessments')
       .set('Authorization', 'Bearer ' + verified.body.token)
-      .send({ responses });
+      .send({ responses, choices });
     expect(saved.status).toBe(200);
     expect(saved.body.success).toBe(true);
     expect(saved.body.report.vector_sign).toMatch(/^V[1-5]-[VECTOR]$/);
@@ -52,6 +55,15 @@ describe('Excel assessment save', () => {
     expect(results.getRow(2).getCell(6).value).toBe(5);
     expect(results.getRow(2).getCell(15).value).toBe('Defining');
     expect(String(results.getRow(2).getCell(12).value || '')).toMatch(/^V[1-5]-[VECTOR]$/);
+    expect(String(results.getRow(2).getCell(21).value || '')).toMatch(/C \(4\)/);
+
+    const responseSheet = workbook.getWorksheet('Responses');
+    expect(responseSheet).toBeTruthy();
+    expect(responseSheet.rowCount).toBe(31);
+    expect(responseSheet.getRow(2).getCell(1).value).toBe('save-test@example.com');
+    expect(String(responseSheet.getRow(2).getCell(6).value || '')).toMatch(/^V[1-5]-[VECTOR]$/);
+    expect(responseSheet.getRow(2).getCell(9).value).toBe('V1');
+    expect(responseSheet.getRow(2).getCell(12).value).toBe('C');
 
     const users = workbook.getWorksheet('Users');
     expect(users.rowCount).toBeGreaterThan(1);

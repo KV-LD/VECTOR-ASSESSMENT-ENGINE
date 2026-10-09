@@ -65,6 +65,10 @@ router.post('/assessments', requireUser, async (req, res, next) => {
     Object.keys((req.body && req.body.responses) || {}).forEach((key) => {
       if (!key.startsWith('_')) responses[key] = req.body.responses[key];
     });
+    const choices = {};
+    Object.keys((req.body && req.body.choices) || {}).forEach((key) => {
+      if (!key.startsWith('_')) choices[key] = req.body.choices[key];
+    });
 
     const answered = questions.filter((q) => responses[q.id] != null).length;
     if (answered !== questions.length) {
@@ -77,7 +81,14 @@ router.post('/assessments', requireUser, async (req, res, next) => {
     let warning = null;
     let savedTo = null;
     try {
-      const saved = await getStore().saveResult({ profile, scores, report });
+      const saved = await getStore().saveResult({
+        profile,
+        scores,
+        report,
+        questions,
+        responses,
+        choices
+      });
       attempt = saved.attempt;
       warning = saved.warning;
       savedTo = saved.file;

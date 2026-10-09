@@ -19,6 +19,8 @@ describe('assessment UI contract', () => {
     expect(css).toContain('#006E74');
     expect(appJs).toContain('/api/auth/otp');
     expect(appJs).toContain('/api/assessments');
+    expect(appJs).toContain('choices');
+    expect(appJs).toContain('buildPdfDocument');
   });
 
   test('admin no longer uses pre/post assessment filters', () => {

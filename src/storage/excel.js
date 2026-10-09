@@ -3,6 +3,10 @@ const ExcelJS = require('exceljs');
 const config = require('../config');
 const { DIM_LEVELS } = require('../scoring');
 
+const QUESTION_IDS = ['V', 'E', 'C', 'O', 'T', 'R'].flatMap((dim) => (
+  [1, 2, 3, 4, 5].map((n) => `${dim}${n}`)
+));
+
 const USER_COLUMNS = [
   { header: 'ID', key: 'id', width: 5 },
   { header: 'Email', key: 'email', width: 25 },
@@ -10,7 +14,8 @@ const USER_COLUMNS = [
   { header: 'Name', key: 'name', width: 25 },
   { header: 'Role', key: 'role', width: 15 },
   { header: 'Timestamp', key: 'timestamp', width: 20 },
-  { header: 'Attempt', key: 'attempt', width: 15 }
+  { header: 'Attempt', key: 'attempt', width: 15 },
+  { header: 'Vector Sign', key: 'vector_sign', width: 15 }
 ];
 
 const RESULT_COLUMNS = [
@@ -33,8 +38,62 @@ const RESULT_COLUMNS = [
   { header: 'C Level', key: 'c_level', width: 14 },
   { header: 'T Level', key: 't_level', width: 14 },
   { header: 'O Level', key: 'o_level', width: 14 },
-  { header: 'R Level', key: 'r_level', width: 14 }
+  { header: 'R Level', key: 'r_level', width: 14 },
+  ...QUESTION_IDS.map((id) => ({ header: id, key: id, width: 12 }))
 ];
+
+const RESPONSE_COLUMNS = [
+  { header: 'Email', key: 'email', width: 25 },
+  { header: 'Employee ID', key: 'emp_id', width: 15 },
+  { header: 'Name', key: 'name', width: 25 },
+  { header: 'Role', key: 'role', width: 15 },
+  { header: 'Attempt', key: 'attempt', width: 12 },
+  { header: 'Vector Sign', key: 'vector_sign', width: 14 },
+  { header: 'Vector Class', key: 'vector_class', width: 14 },
+  { header: 'Timestamp', key: 'timestamp', width: 22 },
+  { header: 'Question ID', key: 'question_id', width: 12 },
+  { header: 'Dimension', key: 'dimension', width: 12 },
+  { header: 'Type', key: 'type', width: 12 },
+  { header: 'Choice', key: 'choice', width: 10 },
+  { header: 'Score', key: 'score', width: 10 },
+  { header: 'Option text', key: 'option_text', width: 50 },
+  { header: 'Question text', key: 'question_text', width: 60 }
+];
+
+function formatChoiceCell(choice, score) {
+  if (choice && score != null && score !== '') return `${choice} (${score})`;
+  if (choice) return String(choice);
+  if (score != null && score !== '') return String(score);
+  return '';
+}
+
+function findOption(question, choice, score) {
+  const opts = (question && question.opts) || [];
+  const byLetter = opts.find((o) => String(o.l) === String(choice || ''));
+  if (byLetter) return byLetter;
+  return opts.find((o) => String(o.s) === String(score)) || null;
+}
+
+function answerCells(questions, responses, choices) {
+  const byId = {};
+  (questions || []).forEach((q) => { byId[q.id] = q; });
+  return QUESTION_IDS.map((id) => {
+    const question = byId[id] || { id, dim: id.charAt(0), type: '', text: '', opts: [] };
+    const score = responses && responses[id] != null ? responses[id] : '';
+    const choice = (choices && choices[id]) || (findOption(question, null, score) || {}).l || '';
+    const option = findOption(question, choice, score);
+    return {
+      id,
+      dim: question.dim || id.charAt(0),
+      type: question.type || '',
+      choice,
+      score,
+      optionText: option ? option.t : '',
+      questionText: question.text || '',
+      cell: formatChoiceCell(choice, score)
+    };
+  });
+}
 
 function levelName(level) {
   return DIM_LEVELS[level] || String(level || '');
@@ -95,8 +154,10 @@ async function initialize() {
     const workbook = new ExcelJS.Workbook();
     const users = workbook.addWorksheet('Users');
     const results = workbook.addWorksheet('Results');
+    const responses = workbook.addWorksheet('Responses');
     bindColumns(users, USER_COLUMNS);
     bindColumns(results, RESULT_COLUMNS);
+    bindColumns(responses, RESPONSE_COLUMNS);
     await workbook.xlsx.writeFile(file);
     console.log(`Excel file initialized at ${file}`);
   }
@@ -108,9 +169,11 @@ async function loadWorkbook() {
   await workbook.xlsx.readFile(config.dataFile);
   const usersSheet = workbook.getWorksheet('Users') || workbook.addWorksheet('Users');
   const resultsSheet = workbook.getWorksheet('Results') || workbook.addWorksheet('Results');
+  const responsesSheet = workbook.getWorksheet('Responses') || workbook.addWorksheet('Responses');
   bindColumns(usersSheet, USER_COLUMNS);
   bindColumns(resultsSheet, RESULT_COLUMNS);
-  return { workbook, usersSheet, resultsSheet };
+  bindColumns(responsesSheet, RESPONSE_COLUMNS);
+  return { workbook, usersSheet, resultsSheet, responsesSheet };
 }
 
 async function writeWorkbook(workbook) {
@@ -182,7 +245,8 @@ const excelStore = {
         profile.name,
         profile.role,
         timestamp,
-        attempt
+        attempt,
+        ''
       ]);
       const written = await writeWorkbook(workbook);
       warning = written.warning;
@@ -203,9 +267,10 @@ const excelStore = {
     return { attempt, warning, file };
   },
 
-  async saveResult({ profile, scores, report }) {
-    const { workbook, usersSheet, resultsSheet } = await loadWorkbook();
+  async saveResult({ profile, scores, report, questions, responses, choices }) {
+    const { workbook, usersSheet, resultsSheet, responsesSheet } = await loadWorkbook();
     const attempt = countEmailRows(resultsSheet, 1, profile.email) + 1;
+    const answers = answerCells(questions, responses, choices);
     if (countEmailRows(usersSheet, 2, profile.email) === 0) {
       appendValues(usersSheet, [
         nextRowNumber(usersSheet) - 1,
@@ -214,8 +279,16 @@ const excelStore = {
         profile.name,
         profile.role,
         report.timestamp,
-        1
+        attempt,
+        report.vector_sign
       ]);
+    } else {
+      usersSheet.eachRow((row, i) => {
+        if (i === 1) return;
+        if (String(row.getCell(2).value || '').trim().toLowerCase() === profile.email) {
+          row.getCell(8).value = report.vector_sign;
+        }
+      });
     }
     appendValues(resultsSheet, [
       profile.email,
@@ -237,8 +310,28 @@ const excelStore = {
       levelName(scores.C.level),
       levelName(scores.T.level),
       levelName(scores.O.level),
-      levelName(scores.R.level)
+      levelName(scores.R.level),
+      ...answers.map((a) => a.cell)
     ]);
+    answers.forEach((a) => {
+      appendValues(responsesSheet, [
+        profile.email,
+        profile.emp_id,
+        profile.name,
+        profile.role,
+        attempt,
+        report.vector_sign,
+        report.vector_class,
+        report.timestamp,
+        a.id,
+        a.dim,
+        a.type,
+        a.choice,
+        a.score,
+        a.optionText,
+        a.questionText
+      ]);
+    });
     const written = await writeWorkbook(workbook);
     appendJsonl({
       type: 'result',
@@ -263,6 +356,7 @@ const excelStore = {
         O: levelName(scores.O.level),
         R: levelName(scores.R.level)
       },
+      answers: answers.map((a) => ({ id: a.id, choice: a.choice, score: a.score })),
       vector_sign: report.vector_sign,
       vector_class: report.vector_class,
       timestamp: report.timestamp
@@ -293,4 +387,6 @@ const excelStore = {
   }
 };
 
+excelStore.QUESTION_IDS = QUESTION_IDS;
+excelStore.answerCells = answerCells;
 module.exports = excelStore;

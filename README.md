@@ -23,6 +23,12 @@ Without SMTP, the 6-digit email code is shown in large type on the start screen 
 
 Data is stored in `data/assessments.xlsx` (gitignored). Close the file in Excel before finishing an assessment.
 
+Workbook sheets:
+
+- **Users** — login identity, attempt number, latest VECTOR sign
+- **Results** — one row per completed attempt: scores, VECTOR sign/class, and each question choice such as `C (4)`
+- **Responses** — one row per question with the chosen letter, score, option text, question text, and VECTOR sign
+
 ## What it does
 
 - 30 role-calibrated questions (5 professional roles)

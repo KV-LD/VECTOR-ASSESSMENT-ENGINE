@@ -215,8 +215,12 @@ async function submitAssessment() {
     return;
   }
   const responses = {};
+  const choices = {};
   Object.keys(state.answers).forEach((k) => {
     if (k.indexOf('_') !== 0) responses[k] = state.answers[k];
+  });
+  Object.keys(state.answers).forEach((k) => {
+    if (k.indexOf('_sel_') === 0) choices[k.slice(5)] = state.answers[k];
   });
   try {
     const saveRes = await fetch((API || '') + '/api/assessments', {
@@ -225,7 +229,7 @@ async function submitAssessment() {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token
       },
-      body: JSON.stringify({ responses, userData: state.userData })
+      body: JSON.stringify({ responses, choices, userData: state.userData })
     });
     const saveData = await saveRes.json().catch(() => ({}));
     if (!saveRes.ok || !saveData.report) {
@@ -247,6 +251,7 @@ function neatVectorSign(r) {
 }
 
 function renderReport(r, warning) {
+  state.lastReport = r;
   const now = new Date(r.timestamp || Date.now());
   const ds = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const sign = neatVectorSign(r);
@@ -296,27 +301,122 @@ function reportBaseName() {
   return 'VECTOR-Report-' + name.replace(/\s+/g, '-');
 }
 
+function pdfStyles() {
+  return `
+    * { box-sizing: border-box; }
+    .pdf-root { width: 720px; background: #ffffff; color: #231F20; font-family: "Source Sans 3", Arial, sans-serif; }
+    .pdf-hero { background: #006E74; color: #fff; padding: 22px 24px 18px; }
+    .pdf-kicker { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7FE0EA; margin-bottom: 8px; }
+    .pdf-name { font-family: "Source Serif 4", Georgia, serif; font-size: 26px; line-height: 1.2; margin: 0 0 6px; }
+    .pdf-meta { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+    .pdf-signbox { display: flex; gap: 24px; margin-top: 16px; }
+    .pdf-signbox div { min-width: 140px; }
+    .pdf-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #9ad7de; margin-bottom: 4px; }
+    .pdf-big { font-family: "Source Serif 4", Georgia, serif; font-size: 34px; color: #7FE0EA; line-height: 1; }
+    .pdf-interp { font-size: 13px; line-height: 1.45; color: #fff; max-width: 360px; }
+    .pdf-body { padding: 18px 24px 12px; }
+    .pdf-h { font-family: "Source Serif 4", Georgia, serif; font-size: 16px; color: #006E74; margin: 16px 0 8px; }
+    .pdf-p { font-size: 12px; line-height: 1.55; margin: 0 0 10px; }
+    .pdf-dim { border: 1px solid #D5E8EA; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+    .pdf-dim-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .pdf-dim-name { font-size: 13px; font-weight: 600; color: #006E74; }
+    .pdf-dim-level { font-size: 12px; color: #006E74; }
+    .pdf-dim-text { font-size: 11px; line-height: 1.45; color: #4A5568; }
+    .pdf-two { display: flex; gap: 10px; }
+    .pdf-two > div { flex: 1; border: 1px solid #D5E8EA; border-radius: 8px; padding: 10px 12px; }
+    .pdf-two h4 { margin: 0 0 6px; font-size: 12px; }
+    .pdf-two p { margin: 0 0 6px; font-size: 11px; line-height: 1.4; }
+    .pdf-move { background: #006E74; color: #fff; border-radius: 8px; padding: 12px 14px; }
+    .pdf-move h3 { font-family: "Source Serif 4", Georgia, serif; font-size: 16px; color: #7FE0EA; margin: 0 0 6px; }
+    .pdf-move p { font-size: 11px; line-height: 1.45; margin: 0 0 8px; color: rgba(255,255,255,0.9); }
+    .pdf-scale { display: flex; gap: 6px; margin: 8px 0; }
+    .pdf-scale span { flex: 1; text-align: center; border: 1px solid #D5E8EA; border-radius: 6px; padding: 6px 4px; font-size: 11px; }
+    .pdf-scale span.on { background: #EEF6F7; color: #006E74; font-weight: 700; }
+    .pdf-foot { font-size: 10px; color: #6B7375; border-top: 1px solid #D5E8EA; padding: 10px 24px 16px; line-height: 1.5; }
+  `;
+}
+
+function buildPdfDocument(r) {
+  const sign = neatVectorSign(r);
+  const name = escapeHtml(state.userData.name || r.name || '');
+  const role = escapeHtml(r.role_label || state.userData.role || '');
+  const date = new Date(r.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dims = (r.dimensions || []).map((d) => `
+    <div class="pdf-dim">
+      <div class="pdf-dim-top">
+        <div class="pdf-dim-name">${escapeHtml(d.dim)} · ${escapeHtml(d.name)}</div>
+        <div class="pdf-dim-level">${escapeHtml(d.level_name || '')}</div>
+      </div>
+      <div class="pdf-dim-text">${escapeHtml(d.interpretation || '')}</div>
+    </div>`).join('');
+  const strengths = (r.strengths || []).map((d) => `<p><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</p>`).join('')
+    || '<p>Continue developing across all dimensions.</p>';
+  const gaps = (r.gaps || []).map((d) => `<p><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</p>`).join('')
+    || '<p>Profile is strong across dimensions.</p>';
+  const move = r.next_move || {};
+  const scale = (r.class_scale || []).map((item) =>
+    `<span class="${item.id === r.vector_class ? 'on' : ''}">${escapeHtml(item.id)} ${escapeHtml(item.name)}</span>`
+  ).join('');
+  const root = document.createElement('div');
+  root.className = 'pdf-root';
+  root.innerHTML = `
+    <style>${pdfStyles()}</style>
+    <div class="pdf-hero">
+      <div class="pdf-kicker">VECTOR Human-AI Capability Profile</div>
+      <h1 class="pdf-name">${name}</h1>
+      <div class="pdf-meta">${role}<br>Assessment completed: ${escapeHtml(date)}</div>
+      <div class="pdf-signbox">
+        <div>
+          <div class="pdf-label">VECTOR Class</div>
+          <div class="pdf-big">${escapeHtml(r.vector_class || '')}</div>
+          <div class="pdf-meta">${escapeHtml(r.class_name || '')}</div>
+        </div>
+        <div>
+          <div class="pdf-label">VECTOR Sign</div>
+          <div class="pdf-big">${escapeHtml(sign)}</div>
+        </div>
+        <div class="pdf-interp">${escapeHtml(r.signature_subtitle || r.class_desc || '')}</div>
+      </div>
+    </div>
+    <div class="pdf-body">
+      <div class="pdf-h">Profile interpretation</div>
+      <div class="pdf-p">${r.narrative || ''}</div>
+      <div class="pdf-h">Dimension profile</div>
+      ${dims}
+      <div class="pdf-h">Characteristic profile</div>
+      <div class="pdf-two"><div><h4>Established strengths</h4>${strengths}</div><div><h4>Development priorities</h4>${gaps}</div></div>
+      <div class="pdf-h">Next VECTOR move</div>
+      <div class="pdf-move">
+        <h3>${escapeHtml(move.title || '')}</h3>
+        <p>${escapeHtml(move.desc || '')}</p>
+        <p><strong>Recommended practice.</strong> ${escapeHtml(move.practice || '')}</p>
+        <p>${escapeHtml(move.timeline || '')}</p>
+      </div>
+      <div class="pdf-h">VECTOR scale</div>
+      <div class="pdf-scale">${scale}</div>
+      <p class="pdf-p">Assessed at <strong>${escapeHtml(r.vector_class || '')} - ${escapeHtml(r.class_name || '')}</strong>.</p>
+    </div>
+    <div class="pdf-foot">VECTOR Framework © Krishnan Nilakantan (NK). Free to use with credit.</div>
+  `;
+  return root;
+}
+
 function downloadPdf(filename) {
-  const source = document.getElementById('report');
-  const clone = source.cloneNode(true);
-  const footer = clone.querySelector('.report-footer');
-  if (footer) footer.remove();
-  clone.classList.add('active');
-  clone.style.display = 'flex';
-  clone.style.width = '800px';
-  clone.style.background = '#EEF6F7';
+  const report = state.lastReport;
+  if (!report) return Promise.reject(new Error('No report to download'));
+  const doc = buildPdfDocument(report);
   const holder = document.createElement('div');
-  holder.style.cssText = 'position:fixed;left:-12000px;top:0;width:800px;background:#EEF6F7;';
-  holder.appendChild(clone);
+  holder.style.cssText = 'position:fixed;left:0;top:0;width:720px;background:#fff;z-index:-1;';
+  holder.appendChild(doc);
   document.body.appendChild(holder);
   return window.html2pdf().set({
-    margin: [8, 8, 10, 8],
+    margin: [8, 8, 8, 8],
     filename,
-    pagebreak: { mode: ['css', 'legacy'], avoid: ['.dim-row', '.narrative-card', '.sb-card', '.dev-card'] },
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#EEF6F7' },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  }).from(clone).save().then(function () {
+    image: { type: 'jpeg', quality: 0.96 },
+    html2canvas: { scale: 1.4, useCORS: true, backgroundColor: '#ffffff', windowWidth: 720 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css'] }
+  }).from(doc).save().then(function () {
     holder.remove();
   }, function () {
     holder.remove();

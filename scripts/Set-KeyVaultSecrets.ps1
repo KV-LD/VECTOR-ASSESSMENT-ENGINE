@@ -7,14 +7,29 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
+Write-Host "Repo folder: $root"
+
+if (-not [System.IO.Path]::IsPathRooted($SecretsFile)) {
+  $SecretsFile = Join-Path $root $SecretsFile
+}
 
 if (-not (Test-Path $SecretsFile)) {
-  if (Test-Path "key-vault-secrets.env.example") {
-    Copy-Item "key-vault-secrets.env.example" $SecretsFile
+  $example = Join-Path $root "key-vault-secrets.env.example"
+  if (Test-Path $example) {
+    Copy-Item $example $SecretsFile
     Write-Host "Created $SecretsFile from the example. Fill in the values, then run this script again."
     exit 1
   }
-  throw "Missing $SecretsFile. Copy key-vault-secrets.env.example first."
+  throw @"
+Cannot find Key Vault secrets file.
+Looked for: $SecretsFile
+Repo folder: $root
+
+In Command Prompt run:
+  cd /d $root
+  git pull origin cursor/rebuild-vector-engine-6fe4
+  copy-keyvault-secrets.bat
+"@
 }
 
 function New-SecretString {

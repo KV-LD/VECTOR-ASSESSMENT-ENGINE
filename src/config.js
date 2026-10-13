@@ -22,7 +22,10 @@ function buildConfig() {
     adminJwtSecret: env('ADMIN_JWT_SECRET', 'admin-secret-key-change-in-production'),
     adminEmail: env('ADMIN_EMAIL', 'admin@ust.com'),
     adminPassword: env('ADMIN_PASSWORD', 'admin123'),
-    storageDriver: env('STORAGE_DRIVER', isAzure ? 'postgres' : 'excel').toLowerCase(),
+    storageDriver: env(
+      'STORAGE_DRIVER',
+      (isAzure || env('KEY_VAULT_URI') || env('AZURE_KEY_VAULT_URI')) ? 'postgres' : 'excel'
+    ).toLowerCase(),
     dataFile,
     azureSqlConnectionString: env('AZURE_SQL_CONNECTION_STRING'),
     keyVaultUri: env('KEY_VAULT_URI', env('AZURE_KEY_VAULT_URI')),
@@ -38,10 +41,10 @@ function buildConfig() {
     smtp: {
       host: env('SMTP_HOST'),
       port: parseInt(env('SMTP_PORT', '587'), 10),
-      secure: env('SMTP_SECURE') === '1',
+      secure: env('SMTP_SECURE') === '1' || env('SMTP_PORT') === '465',
       user: env('SMTP_USER'),
       pass: env('SMTP_PASS'),
-      from: env('SMTP_FROM')
+      from: env('SMTP_FROM', env('SMTP_USER'))
     }
   };
   next.jsonlFile = dataFile.replace(/\.xlsx$/i, '.jsonl');

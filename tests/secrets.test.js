@@ -9,10 +9,12 @@ describe('Key Vault secret map', () => {
       expect(envName).toMatch(/^[A-Z0-9_]+$/);
     });
     expect(SECRET_MAP['JWT-SECRET']).toBe('JWT_SECRET');
-    expect(SECRET_MAP['POSTGRES-PASSWORD']).toBe('POSTGRES_PASSWORD');
+    expect(SECRET_MAP['POSTGRES-CONNECTION-STRING']).toBe('POSTGRES_CONNECTION_STRING');
     expect(SECRET_MAP['SMTP-PASS']).toBe('SMTP_PASS');
-    expect(OPTIONAL_SECRETS.has('SMTP-PASS')).toBe(true);
+    expect(OPTIONAL_SECRETS.has('SMTP-PASS')).toBe(false);
+    expect(OPTIONAL_SECRETS.has('POSTGRES-CONNECTION-STRING')).toBe(false);
     expect(OPTIONAL_SECRETS.has('JWT-SECRET')).toBe(false);
+    expect(OPTIONAL_SECRETS.has('SMTP-FROM')).toBe(true);
   });
 
   test('does not treat Key Vault URI as a secret to fetch', () => {

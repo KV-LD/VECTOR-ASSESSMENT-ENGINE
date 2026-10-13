@@ -1,110 +1,72 @@
-# Put VECTOR secrets in Azure Key Vault (Portal)
+# Azure Key Vault for VECTOR (Portal)
 
-Do not paste passwords into chat, Git, or Application settings. Create each secret in the **Azure Portal Key Vault** UI. The Web App reads them with Managed Identity.
+`KEY_VAULT_URI` is **not** where you paste passwords. It is only the vault URL on the Web App. Each password is a **separate secret** inside that vault.
 
-The only Application setting on the Web App is:
+## Two places
 
-```
-KEY_VAULT_URI=https://<your-vault-name>.vault.azure.net/
-```
-
-Secret **names** must match the table below exactly (hyphens, capital letters).
-
-## 1. Enable Managed Identity on the Web App
-
-1. Azure Portal → your Web App → **Identity**
-2. **System assigned** → **On** → Save
-
-## 2. Let that identity read the vault
-
-**If the vault uses RBAC (recommended)**
-
-1. Key Vault → **Access control (IAM)** → **Add role assignment**
-2. Role: **Key Vault Secrets User**
-3. Assign access to: **Managed identity**
-4. Select your Web App → Review + assign
-
-**If the vault uses Access policies**
-
-1. Key Vault → **Access policies** → Create
-2. Secret permissions: **Get**, **List**
-3. Principal: your Web App's system identity
-
-## 3. Create secrets in the Portal (no PowerShell)
-
-1. Azure Portal → **Key Vault** → your vault
-2. Left menu → **Objects** → **Secrets**
-3. **Generate/Import**
-4. Upload options: **Manual**
-5. **Name**: copy from the **Name** column below (do not add extra spaces)
-6. **Secret value**: paste the real value only in this Portal box
-7. Enabled: **Yes** → **Create**
-8. Repeat for each row you need
-
-### Required
-
-| Name | What to put in Secret value |
+| Where | What you add |
 | --- | --- |
-| `STORAGE-DRIVER` | `postgres` |
-| `JWT-SECRET` | a long random string (32+ characters). Create one yourself; do not reuse the admin password |
-| `ADMIN-JWT-SECRET` | a different long random string |
-| `ADMIN-EMAIL` | the email you will use at `/admin` |
-| `ADMIN-PASSWORD` | the password you will use at `/admin` |
+| **Web App → Environment variables** | One setting named `KEY_VAULT_URI` whose value is the vault URL |
+| **Key Vault → Secrets** | Postgres connection string, SMTP, JWT, admin login |
 
-### Postgres — use either the connection string or the host fields
+## 1. Put the vault URL on the Web App
 
-**Option A (simplest if you already have a URL)**
+1. Open the Key Vault in Azure Portal  
+2. Copy **Vault URI** from the Overview page. It looks like:
 
-| Name | What to put in Secret value |
+   `https://your-vault-name.vault.azure.net/`
+
+3. Web App → **Settings** → **Environment variables** (or Configuration → Application settings)  
+4. **Add**:
+
+   | Name | Value |
+   | --- | --- |
+   | `KEY_VAULT_URI` | `https://your-vault-name.vault.azure.net/` |
+
+5. Save, then **Restart** the Web App after the secrets in step 3 exist  
+
+Do not put the Postgres URL or SMTP password in Application settings.
+
+## 2. Turn on Managed Identity
+
+1. Web App → **Identity** → **System assigned** → **On** → Save  
+2. Key Vault → **Access control (IAM)** → **Add role assignment**  
+   - Role: **Key Vault Secrets User**  
+   - Assign to the **Web App** managed identity  
+
+If the vault still uses Access policies: grant **Get** and **List** on secrets to that identity.
+
+## 3. Create these secrets in the vault
+
+Key Vault → **Objects** → **Secrets** → **Generate/Import** → **Manual**.
+
+**Name** must match the left column exactly.
+
+### You already have these values
+
+| Name | Secret value |
 | --- | --- |
-| `POSTGRES-CONNECTION-STRING` | your full Postgres URL, including user, password, host, database, and `sslmode=require` |
-
-**Option B (separate fields)**
-
-Skip `POSTGRES-CONNECTION-STRING` if you use this set.
-
-| Name | What to put in Secret value |
-| --- | --- |
-| `POSTGRES-HOST` | Postgres server host |
-| `POSTGRES-PORT` | `5432` unless your server uses another port |
-| `POSTGRES-DB` | database name |
-| `POSTGRES-USER` | database user |
-| `POSTGRES-PASSWORD` | database password |
-| `POSTGRES-SSL` | `require` |
-
-### SMTP (OTP email)
-
-| Name | What to put in Secret value |
-| --- | --- |
+| `POSTGRES-CONNECTION-STRING` | your full Postgres URL (include user, password, host, database, `sslmode=require`) |
 | `SMTP-HOST` | SMTP host |
 | `SMTP-PORT` | `587` or `465` |
-| `SMTP-SECURE` | `0` for port 587, `1` for port 465 |
 | `SMTP-USER` | SMTP username |
 | `SMTP-PASS` | SMTP password |
-| `SMTP-FROM` | From address (optional if it is the same as `SMTP-USER`) |
 
-### Optional
+`SMTP-FROM` is optional. If you skip it, the app uses `SMTP-USER`. For port `465` the app enables SSL automatically. For `587` it uses STARTTLS.
 
-| Name | What to put in Secret value |
+### Also create these (not in Postgres/SMTP)
+
+| Name | Secret value |
 | --- | --- |
-| `VECTOR-BUILD` | `V2.3` |
+| `JWT-SECRET` | a long random string you invent (32+ characters) |
+| `ADMIN-JWT-SECRET` | a **different** long random string |
+| `ADMIN-EMAIL` | email you will type at `/admin` |
+| `ADMIN-PASSWORD` | password you will type at `/admin` |
 
-Do not create a secret named `KEY_VAULT_URI`. That value belongs only in Web App Application settings.
+You do **not** need `STORAGE-DRIVER`. When `KEY_VAULT_URI` is set, the app uses Postgres.
 
-## 4. Application settings on the Web App
+## 4. Confirm
 
-Web App → **Settings** → **Environment variables** (or **Configuration** → **Application settings**) → New:
+After restart, Log stream should show secrets loaded from Key Vault and `Storage: postgres`. `/health` should include `"keyVault": true`.
 
-| Name | Value |
-| --- | --- |
-| `KEY_VAULT_URI` | `https://YOUR-VAULT-NAME.vault.azure.net/` |
-
-Do not put Postgres or SMTP passwords here. Restart the Web App after saving. Azure already sets `PORT`.
-
-## 5. Postgres network
-
-On Azure Database for PostgreSQL, allow the Web App to connect (**Allow public access from Azure services**, or the app outbound IPs). Keep SSL on.
-
-## Localhost
-
-Leave `KEY_VAULT_URI` unset. `npm start` still uses Excel on your PC.
+Local `npm start` without `KEY_VAULT_URI` still uses Excel.

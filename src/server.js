@@ -14,7 +14,7 @@ function assertProductionSecrets() {
     throw new Error('ADMIN-PASSWORD is still the localhost default. Set it in Key Vault before hosting.');
   }
   if ((config.storageDriver === 'postgres' || config.storageDriver === 'postgresql') && !config.postgresConfigured) {
-    throw new Error('Postgres secrets are missing from Key Vault (host/user/password or connection string).');
+    throw new Error('Postgres is missing. Create Key Vault secret POSTGRES-CONNECTION-STRING with the full URL.');
   }
 }
 

@@ -3,42 +3,25 @@
 // Managed Identity fetches every secret below at startup.
 
 const SECRET_MAP = {
-  'STORAGE-DRIVER': 'STORAGE_DRIVER',
   'POSTGRES-CONNECTION-STRING': 'POSTGRES_CONNECTION_STRING',
-  'POSTGRES-HOST': 'POSTGRES_HOST',
-  'POSTGRES-PORT': 'POSTGRES_PORT',
-  'POSTGRES-DB': 'POSTGRES_DB',
-  'POSTGRES-USER': 'POSTGRES_USER',
-  'POSTGRES-PASSWORD': 'POSTGRES_PASSWORD',
-  'POSTGRES-SSL': 'POSTGRES_SSL',
   'JWT-SECRET': 'JWT_SECRET',
   'ADMIN-JWT-SECRET': 'ADMIN_JWT_SECRET',
   'ADMIN-EMAIL': 'ADMIN_EMAIL',
   'ADMIN-PASSWORD': 'ADMIN_PASSWORD',
   'SMTP-HOST': 'SMTP_HOST',
   'SMTP-PORT': 'SMTP_PORT',
-  'SMTP-SECURE': 'SMTP_SECURE',
   'SMTP-USER': 'SMTP_USER',
   'SMTP-PASS': 'SMTP_PASS',
   'SMTP-FROM': 'SMTP_FROM',
+  'SMTP-SECURE': 'SMTP_SECURE',
+  'STORAGE-DRIVER': 'STORAGE_DRIVER',
   'VECTOR-BUILD': 'VECTOR_BUILD'
 };
 
 const OPTIONAL_SECRETS = new Set([
-  'STORAGE-DRIVER',
-  'POSTGRES-CONNECTION-STRING',
-  'POSTGRES-HOST',
-  'POSTGRES-PORT',
-  'POSTGRES-DB',
-  'POSTGRES-USER',
-  'POSTGRES-PASSWORD',
-  'POSTGRES-SSL',
-  'SMTP-HOST',
-  'SMTP-PORT',
-  'SMTP-SECURE',
-  'SMTP-USER',
-  'SMTP-PASS',
   'SMTP-FROM',
+  'SMTP-SECURE',
+  'STORAGE-DRIVER',
   'VECTOR-BUILD'
 ]);
 
@@ -54,6 +37,18 @@ function loadAzureSdk() {
     };
   } catch (error) {
     return null;
+  }
+}
+
+function applyVaultDefaults() {
+  if (vaultUri() && !process.env.STORAGE_DRIVER) {
+    process.env.STORAGE_DRIVER = 'postgres';
+  }
+  if (process.env.SMTP_USER && !process.env.SMTP_FROM) {
+    process.env.SMTP_FROM = process.env.SMTP_USER;
+  }
+  if (!process.env.SMTP_SECURE && String(process.env.SMTP_PORT || '') === '465') {
+    process.env.SMTP_SECURE = '1';
   }
 }
 
@@ -105,11 +100,12 @@ async function loadSecrets() {
     }
   }
 
+  applyVaultDefaults();
   reloadAppConfig();
 
   if (missing.length) {
     throw new Error(
-      'Key Vault is missing required secrets: ' + missing.join(', ') + '. See key-vault-secrets.env.example.'
+      'Key Vault is missing required secrets: ' + missing.join(', ') + '. See docs/KEY-VAULT.md.'
     );
   }
 

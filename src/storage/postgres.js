@@ -41,7 +41,7 @@ function getPool() {
   if (pool) return pool;
   if (!config.postgresConfigured) {
     const error = new Error(
-      'Postgres is not configured. Set POSTGRES-HOST, POSTGRES-USER, POSTGRES-PASSWORD, and POSTGRES-DB (or POSTGRES-CONNECTION-STRING) in Key Vault.'
+      'Postgres is not configured. Create Key Vault secret POSTGRES-CONNECTION-STRING with the full connection URL.'
     );
     error.status = 501;
     throw error;
@@ -59,6 +59,15 @@ function getPool() {
 const postgresStore = {
   driver: 'postgres',
   location() {
+    const url = config.postgres.connectionString;
+    if (url) {
+      try {
+        const parsed = new URL(url.replace(/^postgres(ql)?:/i, 'https:'));
+        return `${parsed.hostname}${parsed.pathname}`;
+      } catch (error) {
+        return 'postgres';
+      }
+    }
     if (config.postgres.host) {
       return `${config.postgres.host}/${config.postgres.database}`;
     }

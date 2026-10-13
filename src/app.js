@@ -51,12 +51,18 @@ app.get('/api/version', (req, res) => {
     storage: store.driver,
     location: store.location(),
     azure: config.isAzure,
+    keyVault: Boolean(config.keyVaultUri),
     nodeEnv: config.nodeEnv
   });
 });
 
 app.get('/health', (req, res) => {
-  res.json({ ok: true, build: config.buildId, storage: config.storageDriver });
+  res.json({
+    ok: true,
+    build: config.buildId,
+    storage: config.storageDriver,
+    keyVault: Boolean(config.keyVaultUri)
+  });
 });
 
 app.use('/api', assessmentRoutes);

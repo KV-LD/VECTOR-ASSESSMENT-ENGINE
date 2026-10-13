@@ -4,7 +4,11 @@ const bcrypt = require('bcryptjs');
 const config = require('./config');
 
 const otpStore = new Map();
-const adminPasswordHash = bcrypt.hashSync(config.adminPassword, 10);
+let adminPasswordHash = bcrypt.hashSync(config.adminPassword, 10);
+
+function refreshAdminCredentials() {
+  adminPasswordHash = bcrypt.hashSync(config.adminPassword, 10);
+}
 
 function hashOtp(otp) {
   return crypto.createHash('sha256').update(String(otp)).digest('hex');
@@ -155,5 +159,6 @@ module.exports = {
   issueAdminToken,
   requireUser,
   requireAdmin,
-  checkAdminCredentials
+  checkAdminCredentials,
+  refreshAdminCredentials
 };

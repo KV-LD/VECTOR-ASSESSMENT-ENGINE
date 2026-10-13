@@ -1,6 +1,7 @@
 node_modules/
 .env
 .env.local
+key-vault-secrets.env
 *.xlsx
 data/*.xlsx
 data/*.jsonl

@@ -16,7 +16,7 @@ const config = {
   port: parseInt(env('PORT', '3000'), 10),
   nodeEnv,
   isAzure,
-  buildId: env('VECTOR_BUILD', 'V2'),
+  buildId: env('VECTOR_BUILD', 'V2.2'),
   jwtSecret: env('JWT_SECRET', 'vector-secret-key-change-in-production'),
   adminJwtSecret: env('ADMIN_JWT_SECRET', 'admin-secret-key-change-in-production'),
   adminEmail: env('ADMIN_EMAIL', 'admin@ust.com'),

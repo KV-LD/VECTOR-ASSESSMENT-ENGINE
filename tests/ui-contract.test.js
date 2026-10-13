@@ -16,11 +16,16 @@ describe('assessment UI contract', () => {
     expect(html).toContain('vectorLiveBanner');
     expect(html).not.toMatch(/Pre-Program|Post-Program|attemptType|ASSESSMENT TYPE/);
     expect(html).toContain('Download as PDF');
+    expect(html).not.toContain('html2pdf');
     expect(css).toContain('#006E74');
     expect(appJs).toContain('/api/auth/otp');
     expect(appJs).toContain('/api/assessments');
+    expect(appJs).toContain('/api/report-pdf');
     expect(appJs).toContain('choices');
-    expect(appJs).toContain('buildPdfDocument');
+    expect(appJs).not.toContain('html2pdf');
+    expect(appJs).not.toContain('Characteristic Profile');
+    expect(appJs).not.toContain('Next Vector Move');
+    expect(appJs).not.toContain('VECTOR Scale');
   });
 
   test('admin no longer uses pre/post assessment filters', () => {

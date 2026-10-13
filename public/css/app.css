@@ -5,6 +5,9 @@ body{font-family:"Source Sans 3",system-ui,sans-serif;background:var(--off);colo
 .screen{display:none;min-height:100vh}
 .screen.active{display:flex;flex-direction:column}
 #vectorLiveBanner{position:sticky;top:0;z-index:99999;background:#006E74;color:#FFFFFF;text-align:center;padding:14px 16px;font-family:"Source Sans 3",sans-serif;font-weight:700;font-size:16px;letter-spacing:.04em}
+#vectorLiveBanner[hidden]{display:none!important}
+body:has(#report.active) #vectorLiveBanner,
+body:has(#assessment.active) #vectorLiveBanner{display:none!important}
 #buildStamp{background:#006E74;color:#FFFFFF;font-family:"Source Sans 3",sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;padding:10px 14px;border-radius:8px;margin-bottom:22px}
 
 #welcome{background:var(--off);align-items:center;justify-content:center;padding:40px 24px;position:relative;overflow:hidden}

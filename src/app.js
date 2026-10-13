@@ -25,7 +25,9 @@ function sendHtml(res, filename) {
   const file = path.join(config.publicDir, filename);
   let html = fs.readFileSync(file, 'utf8');
   html = html.replace(/VECTOR BUILD [A-Z0-9.-]+/g, `VECTOR BUILD ${config.buildId}`);
+  html = html.replace(/BUILD V2(?:\.\d+)?/g, `BUILD ${config.buildId}`);
   html = html.replace(/const BUILD = '[^']+'/, `const BUILD = '${config.buildId}'`);
+  html = html.replace(/\/(css|js|vendor)\/([\w.-]+\.(?:css|js))(?!\?)/g, `/$1/$2?v=${config.buildId}`);
   html = html.replace(
     '<body>',
     `<body data-vector-build="${config.buildId}"><!-- served ${new Date().toISOString()} ${config.buildId} -->`

@@ -1,6 +1,7 @@
 const express = require('express');
 const { questionsForRole, isValidRole } = require('../questions');
 const { calculateScores, generateReport } = require('../scoring');
+const { buildReportPdf } = require('../pdf-report');
 const { cleanQuestions } = require('../text');
 const { getStore } = require('../storage');
 const { requestOtp, verifyOtp, issueUserToken, requireUser } = require('../auth');
@@ -104,6 +105,23 @@ router.post('/assessments', requireUser, async (req, res, next) => {
       savedTo,
       warning
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/report-pdf', requireUser, async (req, res, next) => {
+  try {
+    const report = req.body && req.body.report;
+    if (!report || !report.vector_class) {
+      return res.status(400).json({ error: 'Missing report' });
+    }
+    const name = String((req.body && req.body.name) || req.user.name || 'assessment');
+    const buffer = await buildReportPdf({ report, name });
+    const safe = name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'assessment';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="VECTOR-Report-${safe}.pdf"`);
+    res.send(buffer);
   } catch (error) {
     next(error);
   }

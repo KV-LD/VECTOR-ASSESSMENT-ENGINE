@@ -134,6 +134,8 @@ async function startAssessment() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  const banner = document.getElementById('vectorLiveBanner');
+  if (banner) banner.hidden = id !== 'welcome';
   window.scrollTo(0, 0);
 }
 
@@ -277,22 +279,10 @@ function renderReport(r, warning) {
   const dimRows = (r.dimensions || []).map((d) =>
     `<div class="dim-row"><div class="dim-row-top"><div class="dim-letter">${escapeHtml(d.dim)}</div><div class="dim-name-wrap"><div class="dim-fullname">${escapeHtml(d.name)}</div><div class="dim-level-name">${escapeHtml(d.level_name || '')}</div></div><div class="dim-level-badge">${escapeHtml(d.level_name || '')}</div></div><div class="dim-interpretation">${escapeHtml(d.interpretation || '')}</div></div>`
   ).join('');
-  const scale = r.class_scale || [];
-  const scaleNodes = scale.map((item) => {
-    const active = item.id === r.vector_class;
-    return `<div class="scale-node${active ? ' active' : ''}"><div class="scale-v">${escapeHtml(item.id)}</div><div class="scale-n">${escapeHtml(item.name)}</div></div>`;
-  }).join('');
-  const strengths = r.strengths || [];
-  const gaps = r.gaps || [];
-  const move = r.next_move || {};
-  const nextCls = r.next_class;
   const domName = escapeHtml(((r.dimensions || []).find((d) => d.dim === r.dominant) || {}).name || r.dominant || '');
   document.getElementById('reportBody').innerHTML = `
     <div class="r-section"><div class="r-section-title">Dimension Profile</div><div class="dim-grid">${dimRows}</div></div>
-    <div class="r-section"><div class="r-section-title">Profile Interpretation</div><div class="narrative-card"><p>${r.narrative || ''}</p><p>Your dominant dimension is <strong>${domName}</strong> - the capability that most defines your current contribution in human-AI work. Your Vector Signature of <strong>${escapeHtml(sign)}</strong> identifies a practitioner whose most reliable differentiator is ${escapeHtml(r.dominant_blurb || '')}.</p></div></div>
-    <div class="r-section"><div class="r-section-title">Characteristic Profile</div><div class="sb-grid"><div class="sb-card"><div class="sb-title">Established strengths</div>${strengths.length ? strengths.map((d) => `<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</div>`).join('') : '<div class="sb-item">Continue developing across all dimensions to establish clear strengths.</div>'}</div><div class="sb-card"><div class="sb-title">Development priorities</div>${gaps.length ? gaps.map((d) => `<div class="sb-item"><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)} - primary development target</div>`).join('') : '<div class="sb-item">Your profile is strong across dimensions. Focus on advancing your highest dimensions toward Defining.</div>'}</div></div></div>
-    <div class="r-section"><div class="r-section-title">Next Vector Move</div><div class="dev-card"><div class="dev-move">${escapeHtml(move.title || '')}</div><div class="dev-desc">${escapeHtml(move.desc || '')}</div><div class="dev-practice-label">RECOMMENDED PRACTICE</div><div class="dev-practice">${escapeHtml(move.practice || '')}</div><div class="dev-timeline">${escapeHtml(move.timeline || '')}</div></div></div>
-    <div class="r-section"><div class="r-section-title">VECTOR Scale</div><div class="scale-track">${scaleNodes}</div><div class="scale-desc">You are assessed at <strong>${escapeHtml(r.vector_class)} - ${escapeHtml(r.class_name || '')}</strong>. ${nextCls ? 'The next classification is <strong>' + escapeHtml(nextCls) + ' - ' + escapeHtml(r.next_class_name || '') + '</strong>. The Next Vector Move above is the specific practice that closes the gap.' : 'You are at the highest VECTOR classification.'}</div></div>`;
+    <div class="r-section"><div class="r-section-title">Profile Interpretation</div><div class="narrative-card"><p>${r.narrative || ''}</p><p>Your dominant dimension is <strong>${domName}</strong> - the capability that most defines your current contribution in human-AI work. Your Vector Signature of <strong>${escapeHtml(sign)}</strong> identifies a practitioner whose most reliable differentiator is ${escapeHtml(r.dominant_blurb || '')}.</p></div></div>`;
   showScreen('report');
 }
 
@@ -301,145 +291,48 @@ function reportBaseName() {
   return 'VECTOR-Report-' + name.replace(/\s+/g, '-');
 }
 
-function pdfStyles() {
-  return `
-    * { box-sizing: border-box; }
-    .pdf-root { width: 720px; background: #ffffff; color: #231F20; font-family: "Source Sans 3", Arial, sans-serif; }
-    .pdf-hero { background: #006E74; color: #fff; padding: 22px 24px 18px; }
-    .pdf-kicker { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7FE0EA; margin-bottom: 8px; }
-    .pdf-name { font-family: "Source Serif 4", Georgia, serif; font-size: 26px; line-height: 1.2; margin: 0 0 6px; }
-    .pdf-meta { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.5; }
-    .pdf-signbox { display: flex; gap: 24px; margin-top: 16px; }
-    .pdf-signbox div { min-width: 140px; }
-    .pdf-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #9ad7de; margin-bottom: 4px; }
-    .pdf-big { font-family: "Source Serif 4", Georgia, serif; font-size: 34px; color: #7FE0EA; line-height: 1; }
-    .pdf-interp { font-size: 13px; line-height: 1.45; color: #fff; max-width: 360px; }
-    .pdf-body { padding: 18px 24px 12px; }
-    .pdf-h { font-family: "Source Serif 4", Georgia, serif; font-size: 16px; color: #006E74; margin: 16px 0 8px; }
-    .pdf-p { font-size: 12px; line-height: 1.55; margin: 0 0 10px; }
-    .pdf-dim { border: 1px solid #D5E8EA; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
-    .pdf-dim-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-    .pdf-dim-name { font-size: 13px; font-weight: 600; color: #006E74; }
-    .pdf-dim-level { font-size: 12px; color: #006E74; }
-    .pdf-dim-text { font-size: 11px; line-height: 1.45; color: #4A5568; }
-    .pdf-two { display: flex; gap: 10px; }
-    .pdf-two > div { flex: 1; border: 1px solid #D5E8EA; border-radius: 8px; padding: 10px 12px; }
-    .pdf-two h4 { margin: 0 0 6px; font-size: 12px; }
-    .pdf-two p { margin: 0 0 6px; font-size: 11px; line-height: 1.4; }
-    .pdf-move { background: #006E74; color: #fff; border-radius: 8px; padding: 12px 14px; }
-    .pdf-move h3 { font-family: "Source Serif 4", Georgia, serif; font-size: 16px; color: #7FE0EA; margin: 0 0 6px; }
-    .pdf-move p { font-size: 11px; line-height: 1.45; margin: 0 0 8px; color: rgba(255,255,255,0.9); }
-    .pdf-scale { display: flex; gap: 6px; margin: 8px 0; }
-    .pdf-scale span { flex: 1; text-align: center; border: 1px solid #D5E8EA; border-radius: 6px; padding: 6px 4px; font-size: 11px; }
-    .pdf-scale span.on { background: #EEF6F7; color: #006E74; font-weight: 700; }
-    .pdf-foot { font-size: 10px; color: #6B7375; border-top: 1px solid #D5E8EA; padding: 10px 24px 16px; line-height: 1.5; }
-  `;
-}
-
-function buildPdfDocument(r) {
-  const sign = neatVectorSign(r);
-  const name = escapeHtml(state.userData.name || r.name || '');
-  const role = escapeHtml(r.role_label || state.userData.role || '');
-  const date = new Date(r.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  const dims = (r.dimensions || []).map((d) => `
-    <div class="pdf-dim">
-      <div class="pdf-dim-top">
-        <div class="pdf-dim-name">${escapeHtml(d.dim)} · ${escapeHtml(d.name)}</div>
-        <div class="pdf-dim-level">${escapeHtml(d.level_name || '')}</div>
-      </div>
-      <div class="pdf-dim-text">${escapeHtml(d.interpretation || '')}</div>
-    </div>`).join('');
-  const strengths = (r.strengths || []).map((d) => `<p><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</p>`).join('')
-    || '<p>Continue developing across all dimensions.</p>';
-  const gaps = (r.gaps || []).map((d) => `<p><strong>${escapeHtml(d.name)}</strong> - ${escapeHtml(d.level_name)}</p>`).join('')
-    || '<p>Profile is strong across dimensions.</p>';
-  const move = r.next_move || {};
-  const scale = (r.class_scale || []).map((item) =>
-    `<span class="${item.id === r.vector_class ? 'on' : ''}">${escapeHtml(item.id)} ${escapeHtml(item.name)}</span>`
-  ).join('');
-  const root = document.createElement('div');
-  root.className = 'pdf-root';
-  root.innerHTML = `
-    <style>${pdfStyles()}</style>
-    <div class="pdf-hero">
-      <div class="pdf-kicker">VECTOR Human-AI Capability Profile</div>
-      <h1 class="pdf-name">${name}</h1>
-      <div class="pdf-meta">${role}<br>Assessment completed: ${escapeHtml(date)}</div>
-      <div class="pdf-signbox">
-        <div>
-          <div class="pdf-label">VECTOR Class</div>
-          <div class="pdf-big">${escapeHtml(r.vector_class || '')}</div>
-          <div class="pdf-meta">${escapeHtml(r.class_name || '')}</div>
-        </div>
-        <div>
-          <div class="pdf-label">VECTOR Sign</div>
-          <div class="pdf-big">${escapeHtml(sign)}</div>
-        </div>
-        <div class="pdf-interp">${escapeHtml(r.signature_subtitle || r.class_desc || '')}</div>
-      </div>
-    </div>
-    <div class="pdf-body">
-      <div class="pdf-h">Profile interpretation</div>
-      <div class="pdf-p">${r.narrative || ''}</div>
-      <div class="pdf-h">Dimension profile</div>
-      ${dims}
-      <div class="pdf-h">Characteristic profile</div>
-      <div class="pdf-two"><div><h4>Established strengths</h4>${strengths}</div><div><h4>Development priorities</h4>${gaps}</div></div>
-      <div class="pdf-h">Next VECTOR move</div>
-      <div class="pdf-move">
-        <h3>${escapeHtml(move.title || '')}</h3>
-        <p>${escapeHtml(move.desc || '')}</p>
-        <p><strong>Recommended practice.</strong> ${escapeHtml(move.practice || '')}</p>
-        <p>${escapeHtml(move.timeline || '')}</p>
-      </div>
-      <div class="pdf-h">VECTOR scale</div>
-      <div class="pdf-scale">${scale}</div>
-      <p class="pdf-p">Assessed at <strong>${escapeHtml(r.vector_class || '')} - ${escapeHtml(r.class_name || '')}</strong>.</p>
-    </div>
-    <div class="pdf-foot">VECTOR Framework © Krishnan Nilakantan (NK). Free to use with credit.</div>
-  `;
-  return root;
-}
-
-function downloadPdf(filename) {
-  const report = state.lastReport;
-  if (!report) return Promise.reject(new Error('No report to download'));
-  const doc = buildPdfDocument(report);
-  const holder = document.createElement('div');
-  holder.style.cssText = 'position:fixed;left:0;top:0;width:720px;background:#fff;z-index:-1;';
-  holder.appendChild(doc);
-  document.body.appendChild(holder);
-  return window.html2pdf().set({
-    margin: [8, 8, 8, 8],
-    filename,
-    image: { type: 'jpeg', quality: 0.96 },
-    html2canvas: { scale: 1.4, useCORS: true, backgroundColor: '#ffffff', windowWidth: 720 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css'] }
-  }).from(doc).save().then(function () {
-    holder.remove();
-  }, function () {
-    holder.remove();
-    throw new Error('pdf failed');
-  });
-}
-
-function downloadReport(ev) {
+async function downloadReport(ev) {
   if (ev) ev.preventDefault();
   if (window.__vectorDownloading) return;
+  if (!state.lastReport) {
+    alert('No report to download.');
+    return;
+  }
   window.__vectorDownloading = true;
   const btn = document.getElementById('downloadReportBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Preparing PDF...'; }
-  const pdfName = reportBaseName() + '.pdf';
   const finish = function () {
     window.__vectorDownloading = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Download as PDF'; }
   };
-  const run = window.html2pdf ? downloadPdf(pdfName) : Promise.reject(new Error('pdf library missing'));
-  run.then(finish, function () {
-    window.print();
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch((API || '') + '/api/report-pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({ report: state.lastReport, name: state.userData.name })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || ('PDF failed (' + res.status + ')'));
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = reportBaseName() + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     finish();
-  });
+  } catch (err) {
+    finish();
+    alert('Could not download the PDF.\n\n' + (err && err.message ? err.message : ''));
+  }
 }
 
 document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);

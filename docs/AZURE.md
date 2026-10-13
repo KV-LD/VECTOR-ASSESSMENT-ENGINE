@@ -2,7 +2,7 @@
 
 Localhost still uses Excel. Azure uses **Postgres**, with secrets in **Key Vault**, fetched by the Web App **Managed Identity**.
 
-Do not paste passwords into chat. Follow [KEY-VAULT.md](KEY-VAULT.md).
+Do not paste passwords into chat. Create secrets in the Azure Portal. Follow [KEY-VAULT.md](KEY-VAULT.md).
 
 ## Architecture
 

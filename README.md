@@ -23,7 +23,7 @@ Without SMTP, the 6-digit email code is shown on the start screen. Data is store
 
 ## Azure (Postgres + Key Vault)
 
-Do **not** paste passwords into chat. Fill `key-vault-secrets.env` on your PC and upload it to Key Vault. The Web App only gets `KEY_VAULT_URI` and reads the rest with Managed Identity.
+Do **not** paste passwords into chat. Create the secrets in the Azure Portal Key Vault UI. The Web App only gets `KEY_VAULT_URI` and reads the rest with Managed Identity.
 
 See [docs/KEY-VAULT.md](docs/KEY-VAULT.md) and [docs/AZURE.md](docs/AZURE.md).
 
